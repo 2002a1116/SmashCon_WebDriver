@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HID Passthrough Tool</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        height: 100vh;
+        background-color: #f7f7ff;
+      }
+
+      div1 {
+        height: calc(100% - 4rem);
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+        grid-template-rows: 2rem 2rem;
+        row-gap: 1rem;
+        column-gap: 1rem;
+      }
+      div2 {
+        height: 1rem;
+        display: grid;
+        grid-template-columns: 2fr 2fr 3fr 2fr 2fr;
+      }
+      div3 {
+        height: 1fr;
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+      }
+      item {
+        height: 1rem;
+      }
+      textarea {
+        height: 1rem;
+        resize: none;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        padding: 1rem;
+      }
+      input {
+        padding: 0px; /* 移除内边距 */
+        margin: 0px; /* 移除外边距 */
+        height: 1rem;
+      }
+      .responsive-image-container {
+         width: 100%; /* 宽度设置为100%，使容器宽度随浏览器窗口变化 */
+          max-width: 600px; /* 可选：设置最大宽度，防止图片过大 */
+          margin: 0 auto; /* 可选：使容器水平居中 */
+          overflow: hidden; /* 防止内容溢出 */
+      }
+       /* 设置图片的样式 */
+      .responsive-image-container img {
+          width: 100%; /* 宽度设置为100%，使图片宽度随容器变化 */
+          height: auto; /* 高度设置为自动，以保持图片的宽高比 */
+          display: block; /* 移除图片底部的间隙 */
+      }
+    </style>
+    <script>
+      if ("hid" in navigator) {
+        // 浏览器支持hid
+      } else {
+        alert("Your browser is not support Web HID API.");
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="responsive-image-container">
+      <!-- 图片元素，替换为你的图片URL -->
+      <img src="C:\Users\Reed\Desktop\desc.png" alt="A responsive image">
+    </div>
+    <div1>
+      <p>connect status</p>
+      <p id="connection_status">disconnected.</p>
+      <p>firmware version</p>
+      <p id="fw_version">undefined</p>
+      <div>
+        rgb id:
+        <select id="rgb_id">
+            <option value="0">1</option>
+            <option value="1">2</option>
+            <option value="2">3</option>
+            <option value="3">4</option>
+            <option value="4">5</option>
+            <option value="5">6</option>
+            <option value="6">7</option>
+            <option value="7">8</option>
+            <option value="8">9</option>
+            <option value="9">10</option>
+            <option value="10">11</option>
+            <option value="11">12</option>
+        </select>
+      </div>
+      <div>
+        <input type="color" id="rgb_color"/>
+        <button type="button" id="rgb_set">confirm</button>
+      </div>
+      <p>report rate</p>
+      <div2>
+        <item><input type="radio" name="interval" value="1" />1000hz</item>
+        <item><input type="radio" name="interval" value="2" />500hz</item>
+        <item><input type="radio" name="interval" value="4" checked/>250hz(recommend)</item>
+        <item><input type="radio" name="interval" value="8" />125hz</item>
+        <item><input type="radio" name="interval" value="16" />60hz</item>
+      </div2>
+      <p>left rumble ratio(high band)</p>
+      <input type="text" id="amp_lh"/>
+      <p>left rumble ratio(low band)</p>
+      <input type="text" id="amp_ll"/>
+      <p>right rumble ratio(high band)</p>
+      <input type="text" id="amp_rh"/>
+      <p>right rumble ratio(low band)</p>
+      <input type="text" id="amp_rl"/>
+      <p>left joystick horizontal ratio</p>
+      <input type="text" id="ljoy_hori"/>
+      <p>left joystick vertical ratio</p>
+      <input type="text" id="ljoy_vert"/>
+      <p>right joystick horizontal ratio</p>
+      <input type="text" id="rjoy_hori"/>
+      <p>right joystick vertical ratio</p>
+      <input type="text" id="rjoy_vert"/>
+      <p>rumble pattern switch strategy</p>
+      <div3>
+        <item><input type="radio" name="rumble_mode" value="0" checked/>ignore waveform with 0 amplitude</item>
+        <item><input type="radio" name="rumble_mode" value="1" />play waveform with 0 amplitude for least predefined wareform time</item>
+      </div3>
+      <p>joystick debounce</p>
+      <p>to be rewritten,sorry</p>
+      <button type="button" id="open">open</button>
+      <div3>
+        <button type="button" id="close">close</button>
+        <div3>
+          <button type="button" id="read">read</button>
+          <button type="button" id="save">save</button>
+        </div3>
+      </div3>
+    </div1>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script>
+      const connection_status_text = document.querySelector("#connection_status");
+      const btnOpen = document.querySelector("#open");
+      const btnSend = document.querySelector("#save");
+      const btnRead = document.querySelector("#read");
+      const btnClose = document.querySelector("#close");
+      const btnRgbConfirm = document.querySelector('#rgb_set');
+      const rgb_id = document.querySelector("#rgb_id");
+      const rgb_color = document.querySelector("#rgb_color");
+      const interval = document.getElementsByName("#interval");
+      const amp_lh = document.querySelector("#amp_lh");
+      const amp_ll = document.querySelector("#amp_ll");
+      const amp_rh = document.querySelector("#amp_rh");
+      const amp_rl = document.querySelector("#amp_rl");
+      const ljoy_hori = document.querySelector("#ljoy_hori");
+      const ljoy_vert = document.querySelector("#ljoy_vert");
+      const rjoy_hori = document.querySelector("#rjoy_hori");
+      const rjoy_vert = document.querySelector("#rjoy_vert");
+      const rumble_mode = document.getElementsByName("#rumble_mode");
+      let connection_status;
+      let device; // 需要连接或已连接的设备
+      let msg;
+      let fw_version;
+      let conf=new Object();
+      let array=new Array();
+      let red_cnt=0;
+      let snd_cnt=0;
+      let ofst;
+      const JS_FACTOR=32.0;
+      const AMP_FACTOR=128.0;
+      function flush_rgb(){
+        //rgb_color.value=conf.rgb_data[rgb_id.value*3]<<16+conf.rgb_data[rgb_id.value*3+1]<<8+conf.rgb_data[rgb_id.value*3+2];
+        rgb_color.value='#'
+        +conf.rgb_data[rgb_id.value*3+2].toString(16).padStart(2,'0')
+        +conf.rgb_data[rgb_id.value*3+1].toString(16).padStart(2,'0')
+        +conf.rgb_data[rgb_id.value*3].toString(16).padStart(2,'0');
+      }
+      function unpack_conf(){
+        conf.config_bitmap1=array[0];
+        conf.in_interval=array[1];
+        conf.out_interval=array[2];
+        conf.hd_rumble_amp_ratio=_.cloneDeep(array.slice(3,7));
+        conf.js_ratio=Array.from(array.slice(7,11));
+        conf.js_fitting_mode=array[11];
+        conf.js_fitting_param=array[12];
+        conf.bd_addr=_.cloneDeep(array.slice(13,19));
+        conf.rgb_cnt=array[19];
+        conf.rgb_data=_.cloneDeep(array.slice(20));
+      }
+      function pack_conf(){
+        array=[conf.config_bitmap1,conf.in_interval,conf.out_interval,
+        ...conf.hd_rumble_amp_ratio,...conf.js_ratio,
+        conf.js_fitting_mode,conf.js_fitting_param,...conf.bd_addr,
+        conf.rgb_cnt,...conf.rgb_data
+        ];
+      }
+      function flush_setting(){
+        interval.value=conf.in_interval;
+        amp_lh.value=conf.hd_rumble_amp_ratio[0]/AMP_FACTOR;
+        amp_ll.value=conf.hd_rumble_amp_ratio[1]/AMP_FACTOR;
+        amp_rh.value=conf.hd_rumble_amp_ratio[2]/AMP_FACTOR;
+        amp_rl.value=conf.hd_rumble_amp_ratio[3]/AMP_FACTOR;
+        ljoy_hori.value=conf.js_ratio[0]/JS_FACTOR;
+        ljoy_vert.value=conf.js_ratio[1]/JS_FACTOR;
+        rjoy_hori.value=conf.js_ratio[2]/JS_FACTOR;
+        rjoy_vert.value=conf.js_ratio[3]/JS_FACTOR;
+        rumble_mode.value=(conf.config_bitmap1>>6)&1;
+        flush_rgb();
+      }
+      function confirm_setting(){
+        conf.in_interval=interval.value;
+        conf.hd_rumble_amp_ratio[0]=amp_lh.value*AMP_FACTOR;
+        conf.hd_rumble_amp_ratio[1]=amp_ll.value*AMP_FACTOR;
+        conf.hd_rumble_amp_ratio[2]=amp_rh.value*AMP_FACTOR;
+        conf.hd_rumble_amp_ratio[3]=amp_rl.value*AMP_FACTOR;
+        conf.js_ratio[0]=ljoy_hori.value*JS_FACTOR;
+        conf.js_ratio[1]=ljoy_vert.value*JS_FACTOR;
+        conf.js_ratio[2]=rjoy_hori.value*JS_FACTOR;
+        conf.js_ratio[3]=rjoy_vert.value*JS_FACTOR;
+        conf.config_bitmap1&=~(1<<6);
+        conf.config_bitmap1|=(rumble_mode.value<<6);
+      }
+      const send_conf = async (save) => {
+        try {
+          if (!device?.opened) {
+            throw "Device not opened";
+          }
+          confirm_setting();
+          pack_conf();
+          let buf;//=new Uint8Array(63).fill(0);
+          let i=0;
+          for(;(i+1)*62<=array.length;++i)
+          {
+            buf=new Uint8Array([i,...array.slice(i*62,i*62+62)]);
+            console.log("tag1"+array.length.toString());
+            console.log(buf);
+            await device.sendReport(0xF1, buf);
+          }
+          if(62*i<array.length)
+          {
+            //buf=new Uint8Array(63).fill(0);
+            buf=new Uint8Array([i,array.slice(array.length-62*i)]);
+            if(buf.length<63)
+              buf=new Uint8Array([...buf,...new Uint8Array(63-buf.length).fill(0)]);
+            console.log("tag2");
+            console.log(buf);
+            await device.sendReport(0xF1,buf);
+            ++i;
+          }
+          //buf=new Uint8Array(63).fill(0);
+          buf=new Uint8Array([0xFF,i,save]);
+          if(buf.length<63)
+            buf=new Uint8Array([...buf,...new Uint8Array(63-buf.length).fill(0)]);
+          console.log(buf);
+          await device.sendReport(0xF1,buf);
+           // 发送数据，第一个参数为reportId，填0表示不使用reportId
+        } catch (error) {
+          msg = `${error}\n\n`;
+          alert(msg);
+          console.log(msg);
+        }
+      };
+      const read_conf = async () => {
+        try {
+          if (!device?.opened) {
+            throw "Device not opened";
+          }
+          const buf=new Uint8Array(63).fill(0);
+          await device.sendReport(0xF0,buf);
+           // 发送数据，第一个参数为reportId，填0表示不使用reportId
+        } catch (error) {
+          msg = `${error}\n\n`;
+          alert(msg);
+        }
+      };
+      btnRgbConfirm.onclick = () =>{
+        /*conf.rgb_data[rgb_id.value*3]=(rgb_color.value>>16)&0xff;
+        conf.rgb_data[rgb_id.value*3+1]=(rgb_color.value>>8)&0xff;
+        conf.rgb_data[rgb_id.value*3+2]=rgb_color.value&0xff;*/
+        conf.rgb_data[rgb_id.value*3+2]=parseInt((rgb_color.value.slice(1,3)),16)&0xff;
+        conf.rgb_data[rgb_id.value*3+1]=parseInt((rgb_color.value.slice(3,5)),16)&0xff;
+        conf.rgb_data[rgb_id.value*3]=parseInt((rgb_color.value.slice(5,7)),16)&0xff;
+        console.log(rgb_color.value);
+        send_conf(0);
+      }
+      rgb_id.onchange = () => {
+        flush_rgb();
+      }
+      navigator.hid.onconnect = (event) => {
+      };
+      navigator.hid.ondisconnect = (event) => {
+        if(device!=null&&device.vendorId==event.device.vendorId&&device.productId==event.device.productId)
+        {
+            connection_status=0;
+            connection_status_text.innerHTML="disconnected.";
+            device=null;
+            alert("device unpluged!");
+        }
+      };
+      const get_fw_version = async() => {
+        try {
+          if (!device?.opened) {
+            throw "Device not opened";
+          }
+          const buf=new Uint8Array(62).fill(0);
+          //buf[0]=0xFE;
+          await device.sendReport(0xFE,buf);
+           // 发送数据，第一个参数为reportId，填0表示不使用reportId
+        } catch (error) {
+          msg = `${error}\n\n`;
+          alert(msg);
+          console.log(msg);
+        }
+      };
+      btnRead.onclick = () => {
+        conf_read();
+      }
+      btnOpen.onclick = async () => {
+        try {
+          // requestDevice方法将显示一个包含已连接设备列表的对话框，用户选择可以并授予其中一个设备访问权限
+          const devices = await navigator.hid.requestDevice({ filters: [] });
+
+          // const devices = await navigator.hid.requestDevice({
+          //     filters: [{
+          //         vendorId: 0xabcd,  // 根据VID进行过滤
+          //         productId: 0x1234, // 根据PID进行过滤
+          //         usagePage: 0x0c,   // 根据usagePage进行过滤
+          //         usage: 0x01,       // 根据usage进行过滤
+          //     },],
+          // });
+
+          // let devices = await navigator.hid.getDevices(); // getDevices方法可以返回已连接的授权过的设备列表
+
+          if (devices.length == 0) {
+            alert("No device selected.");
+            return;
+          }
+
+          device = devices[0]; // 选择列表中第一个设备
+
+          if (!device.opened) {
+            // 检查设备是否打开
+            await device.open(); // 打开设备
+
+            // 下面几行代码和我的自定义的透传的HID设备有关
+            // 我的设备中有一个collection，包含一个input、一个output
+            // inputReports和outputReports数据是Array，reportSize是8
+            // reportCount表示一包数据的字节数，USB-FS 和 USB-HS 设置的reportCount最大值不同
+            if (device.collections[0].inputReports[0].items[0].isArray && device.collections[0].inputReports[0].items[0].reportSize === 8) {
+              
+              inputDataLength = device.collections[0].inputReports[0].items[0].reportCount ?? 0;
+            }
+            if (device.collections[0].outputReports[0].items[0].isArray && device.collections[0].outputReports[0].items[0].reportSize === 8) {
+              // 发送数据包长度必须和报告描述符中描述的一致
+              outputDataLength = device.collections[0].outputReports[0].items[0].reportCount ?? 0;
+            }
+            msg = `connected to: \n${device.productName}\nPID-${device.productId} VID-${device.vendorId}`;
+            alert(msg);
+            connection_status=1;
+            connection_status_text.innerHTML="connected.";
+            array=new Uint8Array(128).fill(0);
+            get_fw_version();
+          }
+          // await device.close(); // 关闭设备
+          // await device.forget() // 遗忘设备
+
+          // 电脑接收到来自设备的消息回调
+          device.oninputreport = (event) => {
+            console.log(event); // event中包含device、reportId、data等内容
+            let buffer = new Uint8Array(event.data.buffer); // event.data.buffer就是接收到的inputreport包数据了
+            let ofst;
+            switch(event.reportId)
+            {
+              case 0xFE://
+                fw_version=buffer[0]*255+buffer[1];
+                if(fw_version<1){
+                  alert("fw too old.");
+                  device=0;
+                  connection_status=0;
+                  connection_status_text.innerHTML="disconnected.";
+                }
+                document.querySelector("#fw_version").innerHTML=buffer[0].toString()+'.'+buffer[1].toString();
+                read_conf();
+                break;
+              case 0xF0:
+                ofst=buffer[0];
+                if(ofst==0xff)//confirm
+                {
+                  if(red_cnt!=buffer[1]){
+                    alert("read fail,data incomplete!");
+                    break;
+                  }
+                  red_cnt=0;
+                  console.log("read confirm\n");
+                  unpack_conf();
+                  console.log(conf);
+                  flush_setting();
+                }
+                else{
+                  ofst*=62;
+                  buffer=buffer.slice(1);
+                  array=[...array.slice(0,ofst),...buffer,...array.slice(ofst+buffer.length,128-ofst+buffer.length)];
+                  red_cnt++;
+                }
+                break;
+              case 0xF1:
+                if(!buffer[1])
+                  break;
+                if(buffer[0]==1)
+                {
+                  alert("save success");
+                }
+                else{
+                  alert("save fail");
+                }
+                /*if(ofst==0xff)//confirm
+                {
+                    if(buffer[1]!=snd_cnt)//cnt diff
+                    {
+                      alert("save fail.");
+                    }
+                    else{
+                      alert("save success.");
+                    }
+                }
+                    */
+                break;
+            }
+          };
+
+        } catch (error) {
+            msg=`${error}\n\n`;
+            alert(msg);
+            console.log(msg);
+        }
+      };
+
+      // 发送数据相关操作
+      btnSend.onclick = () => {
+        send_conf(1);
+      };
+    </script>
+  </body>
+
+</html>
