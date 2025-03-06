@@ -156,6 +156,8 @@
       </div3>
       <p>joystick debounce</p>
       <p>to be rewritten,sorry</p>
+      <P>calibrate IMU sensor</P>
+      <button type="button" id="imu_cali">calibrate</button>
       <button type="button" id="open">open</button>
         <div4>
           <button type="button" id="close">close</button>
@@ -166,6 +168,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script>
       const connection_status_text = document.querySelector("#connection_status");
+      const btnCaliSensor = document.querySelector("imu_cali");
       const btnOpen = document.querySelector("#open");
       const btnSend = document.querySelector("#save");
       const btnRead = document.querySelector("#read");
@@ -439,17 +442,15 @@
                 else{
                   alert("save fail");
                 }
-                /*if(ofst==0xff)//confirm
-                {
-                    if(buffer[1]!=snd_cnt)//cnt diff
-                    {
-                      alert("save fail.");
-                    }
-                    else{
-                      alert("save success.");
-                    }
+                break;
+              case 0xF2:
+                if(0==buffer[0]){
+                  alert("calibrate success.");
+                }else{
+                  alert("calibrate fail,error:"+buffer[0].toString());
                 }
-                    */
+                break;
+              default:
                 break;
             }
           };
@@ -465,6 +466,10 @@
       btnSend.onclick = () => {
         send_conf(1);
       };
+      btnCaliSensor.onclick = async() =>{
+        const buf=new Uint8Array(62).fill(0);
+        await device.sendReport(0xF2,buf);
+      }
     </script>
   </body>
 
