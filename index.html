@@ -150,12 +150,17 @@
       <p>right joystick vertical ratio</p>
       <input type="text" id="rjoy_vert"/>
       <p>rumble pattern switch strategy</p>
+      <p>joystick debounce</p>
+      <p>to be rewritten,sorry</p>
       <div3>
         <item><input type="radio" name="rumble_mode" value="0" checked/>ignore waveform with 0 amplitude</item>
         <item><input type="radio" name="rumble_mode" value="1" />play waveform with 0 amplitude for least predefined wareform time</item>
       </div3>
-      <p>joystick debounce</p>
-      <p>to be rewritten,sorry</p>
+      <p>imu status:</p>
+      <div3>
+        <item><input type="radio" name="imu_status" value="0" checked/>disabled</item>
+        <item><input type="radio" name="imu_status" value="1" />enabled</item>
+      </div3>
       <P>calibrate IMU sensor</P>
       <button type="button" id="imu_cali">calibrate</button>
       <button type="button" id="open">open</button>
@@ -168,7 +173,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script>
       const connection_status_text = document.querySelector("#connection_status");
-      const btnCaliSensor = document.querySelector("imu_cali");
+      const btnCaliSensor = document.querySelector("#imu_cali");
       const btnOpen = document.querySelector("#open");
       const btnSend = document.querySelector("#save");
       const btnRead = document.querySelector("#read");
@@ -186,6 +191,7 @@
       const rjoy_hori = document.querySelector("#rjoy_hori");
       const rjoy_vert = document.querySelector("#rjoy_vert");
       const rumble_mode = document.getElementsByName("#rumble_mode");
+      const imu_status = document.getElementsByName("#imu_status");
       let connection_status;
       let device; // 需要连接或已连接的设备
       let msg;
@@ -234,6 +240,7 @@
         rjoy_hori.value=conf.js_ratio[2]/JS_FACTOR;
         rjoy_vert.value=conf.js_ratio[3]/JS_FACTOR;
         rumble_mode.value=(conf.config_bitmap1>>6)&1;
+        imu_status.value=(conf.config_bitmap1>>7)&1;
         flush_rgb();
       }
       function confirm_setting(){
@@ -246,8 +253,9 @@
         conf.js_ratio[1]=ljoy_vert.value*JS_FACTOR;
         conf.js_ratio[2]=rjoy_hori.value*JS_FACTOR;
         conf.js_ratio[3]=rjoy_vert.value*JS_FACTOR;
-        conf.config_bitmap1&=~(1<<6);
+        conf.config_bitmap1=0;
         conf.config_bitmap1|=(rumble_mode.value<<6);
+        conf.config_bitmap1|=(imu_status.value<<7);
       }
       const send_conf = async (save) => {
         try {
@@ -467,6 +475,7 @@
         send_conf(1);
       };
       btnCaliSensor.onclick = async() =>{
+        //alert("send cali");
         const buf=new Uint8Array(62).fill(0);
         await device.sendReport(0xF2,buf);
       }
