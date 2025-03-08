@@ -88,6 +88,8 @@
       <p id="connection_status">disconnected.</p>
       <p>firmware version</p>
       <p id="fw_version">undefined</p>
+      <p>rgb led cnt:</p>
+      <input type="number" id="rgb_cnt" min="0" max="28">
       <div>
         rgb id:
         <select id="rgb_id">
@@ -179,6 +181,7 @@
       const btnRead = document.querySelector("#read");
       const btnClose = document.querySelector("#close");
       const btnRgbConfirm = document.querySelector('#rgb_set');
+      const rgb_cnt = document.querySelector("#rgb_cnt");
       const rgb_id = document.querySelector("#rgb_id");
       const rgb_color = document.querySelector("#rgb_color");
       const interval = document.getElementsByName("#interval");
@@ -231,6 +234,7 @@
       }
       function flush_setting(){
         interval.value=conf.in_interval;
+        rgb_cnt.value=conf.rgb_cnt;
         amp_lh.value=conf.hd_rumble_amp_ratio[0]/AMP_FACTOR;
         amp_ll.value=conf.hd_rumble_amp_ratio[1]/AMP_FACTOR;
         amp_rh.value=conf.hd_rumble_amp_ratio[2]/AMP_FACTOR;
@@ -245,6 +249,7 @@
       }
       function confirm_setting(){
         conf.in_interval=interval.value;
+        conf.rgb_cnt=rgb_cnt.value;
         conf.hd_rumble_amp_ratio[0]=amp_lh.value*AMP_FACTOR;
         conf.hd_rumble_amp_ratio[1]=amp_ll.value*AMP_FACTOR;
         conf.hd_rumble_amp_ratio[2]=amp_rh.value*AMP_FACTOR;
