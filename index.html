@@ -16,7 +16,6 @@
         height: 100vh;
         background-color: #f7f7ff;
       }
-
       div1 {
         height: calc(100% - 4rem);
         padding: 2rem;
@@ -29,7 +28,7 @@
       div2 {
         height: 1rem;
         display: grid;
-        grid-template-columns: 2fr 2fr 3fr 2fr 3fr;
+        grid-template-columns: 2fr 2fr 2fr 2fr 2fr;
       }
       div3 {
         height: 1fr;
@@ -39,6 +38,11 @@
       div4 {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
+        column-gap: 1rem;
+      }
+      div5 {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr 2fr;
         column-gap: 1rem;
       }
       item {
@@ -127,28 +131,28 @@
       </div>
       <p>report rate</p>
       <div2>
-        <item><input type="radio" name="interval" value="1" />1000hz</item>
-        <item><input type="radio" name="interval" value="2" />500hz</item>
-        <item><input type="radio" name="interval" value="4" checked/>250hz(recommend)</item>
-        <item><input type="radio" name="interval" value="8" />125hz</item>
+        <item><input type="radio" name="interval" value="1" />1000hz(pls disable imu)</item>
+        <item><input type="radio" name="interval" value="2" />500hz(Experimental)</item>
+        <item><input type="radio" name="interval" value="4" checked/>250hz(Recommend)</item>
+        <item><input type="radio" name="interval" value="8" />125hz(Default)</item>
         <item><input type="radio" name="interval" value="16" />60hz(ns will refuse)</item>
       </div2>
       <p>left rumble ratio(high band)</p>
-      <input type="text" id="amp_lh"/>
+      <input type="number" id="amp_lh"/>
       <p>left rumble ratio(low band)</p>
-      <input type="text" id="amp_ll"/>
+      <input type="number" id="amp_ll"/>
       <p>right rumble ratio(high band)</p>
-      <input type="text" id="amp_rh"/>
+      <input type="number" id="amp_rh"/>
       <p>right rumble ratio(low band)</p>
-      <input type="text" id="amp_rl"/>
+      <input type="number" id="amp_rl"/>
       <p>left joystick horizontal ratio</p>
-      <input type="text" id="ljoy_hori"/>
+      <input type="number" id="ljoy_hori"/>
       <p>left joystick vertical ratio</p>
-      <input type="text" id="ljoy_vert"/>
+      <input type="number" id="ljoy_vert"/>
       <p>right joystick horizontal ratio</p>
-      <input type="text" id="rjoy_hori"/>
+      <input type="number" id="rjoy_hori"/>
       <p>right joystick vertical ratio</p>
-      <input type="text" id="rjoy_vert"/>
+      <input type="number" id="rjoy_vert"/>
       <p>rumble pattern switch strategy</p>
       <p>joystick debounce</p>
       <p>to be rewritten,sorry</p>
@@ -161,6 +165,19 @@
         <item><input type="radio" name="imu_status" value="0" checked/>enabled</item>
         <item><input type="radio" name="imu_status" value="1" />disabled</item>
       </div3>
+      <p>imu smoothing:</p>
+      <div4>
+        <item><input type="radio" name="imu_smoothing_mode" value="0" />disabled</item>
+        <item><input type="radio" name="imu_smoothing_mode" value="1" checked/>index</item>
+        <item><input type="radio" name="imu_smoothing_mode" value="2" />max change rate</item>
+      </div4>
+      <p>imu ratio(0~1.0)</p>
+      <div5>
+        <p>index:</p>
+        <input type="number" id="imu1_ratio" min="0" max="1"/>
+        <p>change rate:</p>
+        <input type="number" id="imu2_ratio" min="0" max="1"/>
+      </div5>
       <P>calibrate IMU sensor</P>
       <button type="button" id="imu_cali">calibrate</button>
       <button type="button" id="open">open</button>
@@ -192,6 +209,9 @@
       const rjoy_vert = document.querySelector("#rjoy_vert");
       const rumble_mode = document.querySelectorAll('input[name="rumble_mode"]');
       const imu_status = document.querySelectorAll('input[name="imu_status"]');
+      const imu_smoothing_mode = document.querySelectorAll('input[name="imu_smoothing_mode"]');
+      const imu1_ratio = document.querySelector("#imu1_ratio");
+      const imu2_ratio = document.querySelector("#imu2_ratio");
       let connection_status;
       let device; // 需要连接或已连接的设备
       let msg;
@@ -227,6 +247,7 @@
         +conf.rgb_data[rgb_id.value*3+2].toString(16).padStart(2,'0')
         +conf.rgb_data[rgb_id.value*3+1].toString(16).padStart(2,'0')
         +conf.rgb_data[rgb_id.value*3].toString(16).padStart(2,'0');
+
       }
       function unpack_conf(){
         conf.config_bitmap1=array[0];
@@ -237,13 +258,17 @@
         conf.js_fitting_mode=array[11];
         conf.js_fitting_param=array[12];
         conf.bd_addr=_.cloneDeep(array.slice(13,19));
-        conf.rgb_cnt=array[19];
-        conf.rgb_data=_.cloneDeep(array.slice(20));
+        conf.imu_smoothing_mode=array[19];
+        conf.imu1_ratio=array[20];
+        conf.imu2_ratio=array[21];
+        conf.rgb_cnt=array[22];
+        conf.rgb_data=_.cloneDeep(array.slice(23));
       }
       function pack_conf(){
         array=[conf.config_bitmap1,conf.in_interval,conf.out_interval,
         ...conf.hd_rumble_amp_ratio,...conf.js_ratio,
         conf.js_fitting_mode,conf.js_fitting_param,...conf.bd_addr,
+        conf.imu_smoothing_mode,conf.imu1_ratio,conf.imu2_ratio,
         conf.rgb_cnt,...conf.rgb_data
         ];
       }
@@ -260,6 +285,10 @@
         rjoy_vert.value=conf.js_ratio[3]/JS_FACTOR;
         set_radio_value(rumble_mode,(conf.config_bitmap1>>6)&1);
         set_radio_value(imu_status,(conf.config_bitmap1>>7)&1);
+        //alert("set :"+conf.imu_smoothing_mode.toString());
+        set_radio_value(imu_smoothing_mode,conf.imu_smoothing_mode);
+        imu1_ratio.value=conf.imu1_ratio/255.0;
+        imu2_ratio.value=conf.imu2_ratio/255.0;
         //rumble_mode.value=(conf.config_bitmap1>>6)&1;
         //imu_status.value=(conf.config_bitmap1>>7)&1;
         flush_rgb();
@@ -282,6 +311,10 @@
         conf.js_ratio[1]=ljoy_vert.value*JS_FACTOR;
         conf.js_ratio[2]=rjoy_hori.value*JS_FACTOR;
         conf.js_ratio[3]=rjoy_vert.value*JS_FACTOR;
+        conf.imu_smoothing_mode=get_radio_value(imu_smoothing_mode);
+        //alert("conf.imu_smoothing_mode:"+ conf.imu_smoothing_mode.toString());
+        conf.imu1_ratio=imu1_ratio.value*255;
+        conf.imu2_ratio=imu2_ratio.value*255;
         conf.config_bitmap1=0;
         conf.config_bitmap1+=get_radio_value(rumble_mode)*0x40;
         conf.config_bitmap1+=get_radio_value(imu_status)*0x80;
@@ -434,7 +467,7 @@
 
           // 电脑接收到来自设备的消息回调
           device.oninputreport = (event) => {
-            console.log(event); // event中包含device、reportId、data等内容
+            //console.log(event); // event中包含device、reportId、data等内容
             let buffer = new Uint8Array(event.data.buffer); // event.data.buffer就是接收到的inputreport包数据了
             let ofst;
             switch(event.reportId)
