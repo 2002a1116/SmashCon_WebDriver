@@ -45,6 +45,16 @@
         grid-template-columns: 1fr 2fr 1fr 2fr;
         column-gap: 1rem;
       }
+      div6 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 1rem;
+      }
+      div7 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        column-gap: 1rem;
+      }
       item {
         height: 1rem;
       }
@@ -129,6 +139,11 @@
         <input type="color" id="rgb_color"/>
         <button type="button" id="rgb_set">confirm</button>
       </div>
+      <p>pro firmware version</p>
+      <div6>
+        <item><input type="radio" name="pro_fw_version" value="0" />3.48</item>
+        <item><input type="radio" name="pro_fw_version" value="1" checked/>4.51</item>
+      </div6>
       <p>report rate</p>
       <div2>
         <item><input type="radio" name="interval" value="1" />1000hz(pls disable imu)</item>
@@ -137,25 +152,106 @@
         <item><input type="radio" name="interval" value="8" />125hz(Default)</item>
         <item><input type="radio" name="interval" value="16" />60hz(ns will refuse)</item>
       </div2>
-      <p>left rumble ratio(high band)</p>
-      <input type="number" id="amp_lh"/>
-      <p>left rumble ratio(low band)</p>
-      <input type="number" id="amp_ll"/>
-      <p>right rumble ratio(high band)</p>
-      <input type="number" id="amp_rh"/>
-      <p>right rumble ratio(low band)</p>
-      <input type="number" id="amp_rl"/>
-      <p>left joystick horizontal ratio</p>
-      <input type="number" id="ljoy_hori"/>
-      <p>left joystick vertical ratio</p>
-      <input type="number" id="ljoy_vert"/>
-      <p>right joystick horizontal ratio</p>
-      <input type="number" id="rjoy_hori"/>
-      <p>right joystick vertical ratio</p>
-      <input type="number" id="rjoy_vert"/>
-      <p>rumble pattern switch strategy</p>
+      <p>left rumble ratio:</p>
+      <div6>
+        <div>
+          high band:
+          <input type="number" id="amp_lh"/>
+        </div>
+        <div>
+          low band:
+          <input type="number" id="amp_ll"/>
+        </div>
+      </div6>
+      <p>right rumble ratio</p>
+      <div6>
+        <div>
+          high band:
+          <input type="number" id="amp_rh"/>
+        </div>
+        <div>
+          low band:
+          <input type="number" id="amp_rl"/>
+        </div>
+      </div6>
+      <p>left joystick ratio:</p>
+      <div6>
+        <div>
+          hori:
+          <input type="number" id="ljoy_hori"/>
+        </div>
+        <div>
+          vert:
+          <input type="number" id="ljoy_vert"/>
+        </div>
+      </div6>
+      <p>right joystick ratio:</p>
+      <div6>
+        <div>
+          hori:
+          <input type="number" id="rjoy_hori"/>
+        </div>
+        <div>
+          vert:
+          <input type="number" id="rjoy_vert"/>
+        </div>
+      </div6>
+      <div>
+        joystick calibrate:
+        <select id="js_id">
+          <option value="0">left</option>
+          <option value="1">right</option>
+        </select>
+      </div>
+      <div3>
+        <p>this is for initialize factory config,<br/>pls use switch internal calibration instead.</p>
+        <div4>
+          <button type="button" id="js_cali_read">read</button>
+          <button type="button" id="js_cali_start">start</button>
+          <button type="button" id="js_cali_finish">finish</button>
+        </div4>
+      </div3>
+      <p>X:</p>
+      <div7>
+        <div>
+          x pos:
+          <input type="number" id="js_x"/>
+        </div>
+        <div>
+          x0:
+          <input type="number" id="js_xc"/>
+        </div>
+        <div>
+          x+:
+          <input type="number" id="js_xp"/>
+        </div>
+        <div>
+          x-:
+          <input type="number" id="js_xn"/>
+        </div>
+      </div7>
+      <p>Y:</p>
+      <div7>
+        <div>
+          y pos:
+          <input type="number" id="js_y"/>
+        </div>
+        <div>
+          y0:
+          <input type="number" id="js_yc"/>
+        </div>
+        <div>
+          y+:
+          <input type="number" id="js_yp"/>
+        </div>
+        <div>
+          y-:
+          <input type="number" id="js_yn"/>
+        </div>
+      </div7>
       <p>joystick debounce</p>
       <p>to be rewritten,sorry</p>
+      <p>rumble pattern switch strategy</p>
       <div3>
         <item><input type="radio" name="rumble_mode" value="1" />ignore waveform with 0 amplitude</item>
         <item><input type="radio" name="rumble_mode" value="0" checked/>play waveform with 0 amplitude for least predefined wareform time</item>
@@ -165,19 +261,21 @@
         <item><input type="radio" name="imu_status" value="0" checked/>enabled</item>
         <item><input type="radio" name="imu_status" value="1" />disabled</item>
       </div3>
-      <p>imu smoothing:</p>
+      <p>gyro ratio(0~2):(need recalibrate)</p>
       <div4>
-        <item><input type="radio" name="imu_smoothing_mode" value="0" />disabled</item>
-        <item><input type="radio" name="imu_smoothing_mode" value="1" checked/>index</item>
-        <item><input type="radio" name="imu_smoothing_mode" value="2" />max change rate</item>
+        <div3>
+          <p>x:</p>
+          <input type="number" id="imu_ratio_x" min="0" max="2"/>
+        </div3>
+        <div3>
+          <p>y:</p>
+          <input type="number" id="imu_ratio_y" min="0" max="2"/>
+        </div3>
+        <div3>
+          <p>z:</p>
+          <input type="number" id="imu_ratio_z" min="0" max="2"/>
+        </div3>
       </div4>
-      <p>imu ratio(0~1.0)</p>
-      <div5>
-        <p>index:</p>
-        <input type="number" id="imu1_ratio" min="0" max="1"/>
-        <p>change rate:</p>
-        <input type="number" id="imu2_ratio" min="0" max="1"/>
-      </div5>
       <P>calibrate IMU sensor</P>
       <button type="button" id="imu_cali">calibrate</button>
       <button type="button" id="open">open</button>
@@ -196,9 +294,13 @@
       const btnRead = document.querySelector("#read");
       const btnClose = document.querySelector("#close");
       const btnRgbConfirm = document.querySelector('#rgb_set');
+      const btnJoystickCaliStart = document.querySelector('#js_cali_start');
+      const btnJoystickCaliEnd = document.querySelector('#js_cali_finish');
+      const btnJoystickCaliRead = document.querySelector('#js_cali_read');
       const rgb_id = document.querySelector("#rgb_id");
       const rgb_color = document.querySelector("#rgb_color");
       const interval = document.querySelectorAll('input[name="interval"]');
+      const pro_fw_version = document.querySelectorAll('input[name="pro_fw_version"]');
       const amp_lh = document.querySelector("#amp_lh");
       const amp_ll = document.querySelector("#amp_ll");
       const amp_rh = document.querySelector("#amp_rh");
@@ -207,11 +309,21 @@
       const ljoy_vert = document.querySelector("#ljoy_vert");
       const rjoy_hori = document.querySelector("#rjoy_hori");
       const rjoy_vert = document.querySelector("#rjoy_vert");
+      const js_id_s = document.querySelector("#js_id");
+      const js_xp = document.querySelector("#js_xp");
+      const js_xn = document.querySelector("#js_xn");
+      const js_yp = document.querySelector("#js_yp");
+      const js_yn = document.querySelector("#js_yn");
+      const js_x = document.querySelector("#js_x");
+      const js_y = document.querySelector("#js_y");
+      const js_xc = document.querySelector("#js_xc");
+      const js_yc = document.querySelector("#js_yc");
       const rumble_mode = document.querySelectorAll('input[name="rumble_mode"]');
       const imu_status = document.querySelectorAll('input[name="imu_status"]');
-      const imu_smoothing_mode = document.querySelectorAll('input[name="imu_smoothing_mode"]');
-      const imu1_ratio = document.querySelector("#imu1_ratio");
-      const imu2_ratio = document.querySelector("#imu2_ratio");
+      const imu_ratio_x = document.querySelector("#imu_ratio_x");
+      const imu_ratio_y = document.querySelector("#imu_ratio_y");
+      const imu_ratio_z = document.querySelector("#imu_ratio_z");
+      const PAYLOAD_LENGTH = 61;
       let connection_status;
       let device; // 需要连接或已连接的设备
       let msg;
@@ -221,6 +333,9 @@
       let red_cnt=0;
       let snd_cnt=0;
       let ofst;
+      let js_cali_fsm=0;
+      let js_id=parseInt(js_id_s.value,10);
+      let x=0,y=0,xp=0,yp=0,xn=0,yn=0,xc=0,yc=0;
       const JS_FACTOR=32.0;
       const AMP_FACTOR=128.0;
       function get_radio_value(radios){
@@ -241,13 +356,130 @@
           }
         }
       }
+      js_id_s.onchange = () => {
+        js_id=parseInt(js_id_s.value,10);
+        read_js_cali();
+      }
+      function flush_js_cali_figure(){
+        js_x.value=x;
+        js_xc.value=xc;
+        js_xp.value=xp;
+        js_xn.value=xn;
+        js_y.value=y;
+        js_yc.value=yc;
+        js_yp.value=yp;
+        js_yn.value=yn;
+      }
+      btnJoystickCaliStart.onclick = () => {
+        xp=yp=0;
+        xn=yn=4096;
+        flush_js_cali_figure();
+        js_cali_fsm=1;
+      }
+      function std_input_handler(buf){
+        //hori(lower 12 bit)
+        //vert(higher 12 bit)
+        //ljs:567 rjs:89a
+        let base=js_id*3+5;
+        x=buf[base]+((buf[base+1]&0xf)<<8);
+        y=(buf[base+1]>>4)+(buf[base+2]<<4);
+        if(js_cali_fsm){
+          if(js_cali_fsm==1){
+            xc=x;
+            yc=y;
+            //js_xc.value=js_x.value;
+            //js_yc.value=js_y.value;
+            js_cali_fsm=2;
+          }
+          if(x>xp)xp=x;
+          if(x<xn)xn=x;
+          if(y>yp)yp=y;
+          if(y<yn)yn=y;
+        }
+        flush_js_cali_figure();
+      }
+      btnJoystickCaliEnd.onclick = async() => {
+        if(js_cali_fsm!=2){
+          alert("finish fail,status is:"+js_cali_fsm.toString());
+          return;
+        }
+        let xpr=xp-xc;
+        let xnr=xc-xn;
+        let ypr=yp-yc;
+        let ynr=yc-yn;
+        console.log("cali js:"+js_id.toString());
+        console.log("set cali x:"+xc.toString()+"|"+xpr.toString()+"|"+xnr.toString());
+        console.log("set cali y:"+yc.toString()+"|"+ypr.toString()+"|"+ynr.toString());
+        //4 byte addr,1 byte size,6*1.5=9byte data
+        /*        uint16_t AnalogStickCalXPositive:12;
+                  uint16_t AnalogStickCalYPositive:12;
+                  uint16_t AnalogStickCalX0:12;
+                  uint16_t AnalogStickCalY0:12;
+                  uint16_t AnalogStickCalXNegative:12;
+                  uint16_t AnalogStickCalYNegative:12;
+              */
+        let buf=new Uint8Array(14);
+        let addr=0x603d+js_id*0x12;
+        buf[4]=9;//size
+        for(let i=0;i<4;++i){
+          buf[i]=addr&0xff;
+          addr>>=8;
+        }//addr
+        buf[5]=xpr&0xff;
+        buf[6]=((xpr>>8)&0xf)+((ypr&0xf)<<4);
+        buf[7]=(ypr>>4)&0xff;
+
+        buf[8]=xc&0xff;
+        buf[9]=((xc>>8)&0xf)+((yc&0xf)<<4);
+        buf[10]=(yc>>4)&0xff;
+
+        buf[11]=xnr&0xff;
+        buf[12]=((xnr>>8)&0xf)+((ynr&0xf)<<4);
+        buf[13]=(ynr>>4)&0xff;
+        await fw_snd(0x04,buf);
+        js_cali_fsm=0;
+      }
+      function read_erom_handler(buf){
+        let addr=0x603d+js_id*0x12;
+        let addr2=buf[0]+(buf[1]<<8)+(buf[2]<<16)+(buf[3]<<24);
+        //console.log("read_erom_handler");
+        //console.log(buf);
+        if(addr!=addr2)return;
+        console.log("read success addr:"+addr.toString()+"|"+addr2.toString());
+        if(buf[4]!=9)return;
+        console.log("decode erom");
+        console.log(buf);
+        //console.log(buf[8].toString()+"|"+buf[9].toString()+"|"+buf[10].toString());
+        let base=8;
+        base=8;
+        xc=buf[base]+((buf[base+1]&0xf)<<8);
+        yc=(buf[base+1]>>4)+(buf[base+2]<<4);
+
+        base=5;
+        xp=buf[base]+((buf[base+1]&0xf)<<8)+xc;
+        yp=(buf[base+1]>>4)+(buf[base+2]<<4)+yc;
+
+        base=11;
+        xn=xc-(buf[base]+((buf[base+1]&0xf)<<8));
+        yn=yc-((buf[base+1]>>4)+(buf[base+2]<<4));
+        flush_js_cali_figure();
+      }
+      const read_js_cali = async() => {
+        let buf=new Uint8Array(5);
+        let addr=0x603d+js_id*0x12;
+        buf[4]=9;//size
+        for(let i=0;i<4;++i){
+          buf[i]=addr&0xff;
+          addr>>=8;
+        }//addr
+        await fw_snd(0x03,buf);
+      }
       function flush_rgb(){
         //rgb_color.value=conf.rgb_data[rgb_id.value*3]<<16+conf.rgb_data[rgb_id.value*3+1]<<8+conf.rgb_data[rgb_id.value*3+2];
         rgb_color.value='#'
         +conf.rgb_data[rgb_id.value*3+2].toString(16).padStart(2,'0')
         +conf.rgb_data[rgb_id.value*3+1].toString(16).padStart(2,'0')
         +conf.rgb_data[rgb_id.value*3].toString(16).padStart(2,'0');
-
       }
       function unpack_conf(){
         conf.config_bitmap1=array[0];
@@ -258,23 +490,23 @@
         conf.js_fitting_mode=array[11];
         conf.js_fitting_param=array[12];
         conf.bd_addr=_.cloneDeep(array.slice(13,19));
-        conf.imu_smoothing_mode=array[19];
-        conf.imu1_ratio=array[20];
-        conf.imu2_ratio=array[21];
-        conf.rgb_cnt=array[22];
-        conf.rgb_data=_.cloneDeep(array.slice(23));
+        conf.imu_ratio_x=array[19];
+        conf.imu_ratio_y=array[20];
+        conf.imu_ratio_z=array[21];
+        conf.pro_fw_version=array[22];
+        conf.rgb_cnt=array[23];
+        conf.rgb_data=_.cloneDeep(array.slice(24));
       }
       function pack_conf(){
         array=[conf.config_bitmap1,conf.in_interval,conf.out_interval,
         ...conf.hd_rumble_amp_ratio,...conf.js_ratio,
         conf.js_fitting_mode,conf.js_fitting_param,...conf.bd_addr,
-        conf.imu_smoothing_mode,conf.imu1_ratio,conf.imu2_ratio,
-        conf.rgb_cnt,...conf.rgb_data
+        conf.imu_ratio_x,conf.imu_ratio_y,conf.imu_ratio_z,
+        conf.pro_fw_version,conf.rgb_cnt,...conf.rgb_data
         ];
       }
       function flush_setting(){
         set_radio_value(interval,conf.in_interval);
-        //interval.value=conf.in_interval;
         amp_lh.value=conf.hd_rumble_amp_ratio[0]/AMP_FACTOR;
         amp_ll.value=conf.hd_rumble_amp_ratio[1]/AMP_FACTOR;
         amp_rh.value=conf.hd_rumble_amp_ratio[2]/AMP_FACTOR;
@@ -285,24 +517,15 @@
         rjoy_vert.value=conf.js_ratio[3]/JS_FACTOR;
         set_radio_value(rumble_mode,(conf.config_bitmap1>>6)&1);
         set_radio_value(imu_status,(conf.config_bitmap1>>7)&1);
-        //alert("set :"+conf.imu_smoothing_mode.toString());
-        set_radio_value(imu_smoothing_mode,conf.imu_smoothing_mode);
-        imu1_ratio.value=conf.imu1_ratio/255.0;
-        imu2_ratio.value=conf.imu2_ratio/255.0;
-        //rumble_mode.value=(conf.config_bitmap1>>6)&1;
-        //imu_status.value=(conf.config_bitmap1>>7)&1;
+        imu_ratio_x.value=conf.imu_ratio_x/127.0;
+        imu_ratio_y.value=conf.imu_ratio_y/127.0;
+        imu_ratio_z.value=conf.imu_ratio_z/127.0;
+        set_radio_value(pro_fw_version,conf.pro_fw_version);
         flush_rgb();
       }
       function confirm_setting(){
-        //let tmp="";
         conf.in_interval=get_radio_value(interval);
         conf.out_interval=conf.in_interval;
-        /*alert("interval:"+conf.in_interval.toString());
-        for(let i=0;i<interval.length;++i){
-          tmp+=interval[i].value.toString()+":"+interval[i].checked.toString()+'\n';
-        }
-        alert(tmp);*/
-        //conf.in_interval=interval.value;
         conf.hd_rumble_amp_ratio[0]=amp_lh.value*AMP_FACTOR;
         conf.hd_rumble_amp_ratio[1]=amp_ll.value*AMP_FACTOR;
         conf.hd_rumble_amp_ratio[2]=amp_rh.value*AMP_FACTOR;
@@ -311,15 +534,40 @@
         conf.js_ratio[1]=ljoy_vert.value*JS_FACTOR;
         conf.js_ratio[2]=rjoy_hori.value*JS_FACTOR;
         conf.js_ratio[3]=rjoy_vert.value*JS_FACTOR;
-        conf.imu_smoothing_mode=get_radio_value(imu_smoothing_mode);
-        //alert("conf.imu_smoothing_mode:"+ conf.imu_smoothing_mode.toString());
-        conf.imu1_ratio=imu1_ratio.value*255;
-        conf.imu2_ratio=imu2_ratio.value*255;
+        conf.imu_ratio_x=parseInt(imu_ratio_x.value*127,10);
+        conf.imu_ratio_y=parseInt(imu_ratio_y.value*127,10);
+        conf.imu_ratio_z=parseInt(imu_ratio_z.value*127,10);
+        //alert("conf.imu2_ratio"+conf.imu2_ratio.toString());
         conf.config_bitmap1=0;
         conf.config_bitmap1+=get_radio_value(rumble_mode)*0x40;
         conf.config_bitmap1+=get_radio_value(imu_status)*0x80;
-        //alert("data:"+conf.config_bitmap1.toString());
-        //alert(get_radio_value(imu_status));
+        conf.pro_fw_version=get_radio_value(pro_fw_version);
+      }
+      function hid_snd(id,buf){
+        if(!(buf instanceof Array||buf instanceof ArrayBuffer||buf instanceof Uint8Array)){
+          console.log("error snd buf isnt array id:"+id.toString());
+          console.log(buf);
+          return;
+        }
+        if(buf.length>63){
+          buf=buf.slice(0,63);
+        }else if(buf.length<63){
+          buf=new Uint8Array([...buf,...(new Uint8Array(63-buf.length).fill(0))]);
+        }
+        console.log("snd:"+id.toString());
+        console.log(buf);
+        device.sendReport(id,buf);
+      }
+      function fw_snd(id,buf) {
+        if(buf===null)
+          buf=new Uint8Array(1).fill(0);
+        if(!(buf instanceof Array||buf instanceof ArrayBuffer||buf instanceof Uint8Array)){
+          console.log("error fw buf isnt array id:"+id.toString());
+          console.log(buf);
+          return;
+        }
+        console.log(buf);
+        hid_snd(0xfe,new Uint8Array([id,...buf]));
       }
       const send_conf = async (save) => {
         try {
@@ -328,33 +576,25 @@
           }
           confirm_setting();
           pack_conf();
-          let buf;//=new Uint8Array(63).fill(0);
+          console.log("tag");
+          let buf;
           let i=0;
-          for(;(i+1)*62<=array.length;++i)
+          for(;(i+1)*PAYLOAD_LENGTH<=array.length;++i)
           {
-            buf=new Uint8Array([i,...array.slice(i*62,i*62+62)]);
-            console.log("tag1"+array.length.toString());
-            console.log(buf);
-            await device.sendReport(0xF1, buf);
+            buf=new Uint8Array([i,...array.slice(i*PAYLOAD_LENGTH,i*PAYLOAD_LENGTH+PAYLOAD_LENGTH)]);
+            await fw_snd(0x02,buf);
           }
-          if(62*i<array.length)
+          if(PAYLOAD_LENGTH*i<array.length)
           {
             //buf=new Uint8Array(63).fill(0);
-            buf=new Uint8Array([i,array.slice(array.length-62*i)]);
+            buf=new Uint8Array([i,array.slice(PAYLOAD_LENGTH*i)]);
             if(buf.length<63)
               buf=new Uint8Array([...buf,...new Uint8Array(63-buf.length).fill(0)]);
-            console.log("tag2");
-            console.log(buf);
-            await device.sendReport(0xF1,buf);
+            fw_snd(0x02,buf);
             ++i;
           }
-          //buf=new Uint8Array(63).fill(0);
           buf=new Uint8Array([0xFF,i,save]);
-          if(buf.length<63)
-            buf=new Uint8Array([...buf,...new Uint8Array(63-buf.length).fill(0)]);
-          console.log(buf);
-          await device.sendReport(0xF1,buf);
-           // 发送数据，第一个参数为reportId，填0表示不使用reportId
+          fw_snd(0x02,buf);
         } catch (error) {
           msg = `${error}\n\n`;
           alert(msg);
@@ -366,18 +606,16 @@
           if (!device?.opened) {
             throw "Device not opened";
           }
-          const buf=new Uint8Array(63).fill(0);
-          await device.sendReport(0xF0,buf);
-           // 发送数据，第一个参数为reportId，填0表示不使用reportId
+          fw_snd(0x01,null);//no payload
         } catch (error) {
           msg = `${error}\n\n`;
           alert(msg);
         }
       };
+      btnJoystickCaliRead.onclick = () => {
+        read_js_cali();
+      }
       btnRgbConfirm.onclick = () =>{
-        /*conf.rgb_data[rgb_id.value*3]=(rgb_color.value>>16)&0xff;
-        conf.rgb_data[rgb_id.value*3+1]=(rgb_color.value>>8)&0xff;
-        conf.rgb_data[rgb_id.value*3+2]=rgb_color.value&0xff;*/
         conf.rgb_data[rgb_id.value*3+2]=parseInt((rgb_color.value.slice(1,3)),16)&0xff;
         conf.rgb_data[rgb_id.value*3+1]=parseInt((rgb_color.value.slice(3,5)),16)&0xff;
         conf.rgb_data[rgb_id.value*3]=parseInt((rgb_color.value.slice(5,7)),16)&0xff;
@@ -403,9 +641,7 @@
           if (!device?.opened) {
             throw "Device not opened";
           }
-          const buf=new Uint8Array(62).fill(0);
-          //buf[0]=0xFE;
-          await device.sendReport(0xFE,buf);
+          fw_snd(0xff,null);
            // 发送数据，第一个参数为reportId，填0表示不使用reportId
         } catch (error) {
           msg = `${error}\n\n`;
@@ -413,8 +649,8 @@
           console.log(msg);
         }
       };
-      btnRead.onclick = () => {
-        conf_read();
+      btnRead.onclick = async () => {
+        read_conf();
       }
       btnOpen.onclick = async () => {
         try {
@@ -464,17 +700,13 @@
           }
           // await device.close(); // 关闭设备
           // await device.forget() // 遗忘设备
-
-          // 电脑接收到来自设备的消息回调
-          device.oninputreport = (event) => {
-            //console.log(event); // event中包含device、reportId、data等内容
-            let buffer = new Uint8Array(event.data.buffer); // event.data.buffer就是接收到的inputreport包数据了
-            let ofst;
-            switch(event.reportId)
+          function fw_packet_dispatch(id,buffer){
+            console.log("fw dispatch:"+id.toString());
+            switch(id)
             {
-              case 0xFE://
+              case 0xFF://fw version
                 fw_version=buffer[0]*255+buffer[1];
-                if(fw_version<1){
+                if(fw_version<2){
                   alert("fw too old.");
                   device=0;
                   connection_status=0;
@@ -483,7 +715,7 @@
                 document.querySelector("#fw_version").innerHTML=buffer[0].toString()+'.'+buffer[1].toString();
                 read_conf();
                 break;
-              case 0xF0:
+              case 0x01:
                 ofst=buffer[0];
                 if(ofst==0xff)//confirm
                 {
@@ -498,13 +730,15 @@
                   flush_setting();
                 }
                 else{
-                  ofst*=62;
+                  console.log("buffer");
+                  console.log(buffer);
+                  ofst*=PAYLOAD_LENGTH;
                   buffer=buffer.slice(1);
                   array=[...array.slice(0,ofst),...buffer,...array.slice(ofst+buffer.length,128-ofst+buffer.length)];
                   red_cnt++;
                 }
                 break;
-              case 0xF1:
+              case 0x02:
                 if(!buffer[1])
                   break;
                 if(buffer[0]==1)
@@ -512,15 +746,45 @@
                   alert("save success");
                 }
                 else{
+                  console.log(buffer);
                   alert("save fail");
                 }
                 break;
-              case 0xF2:
+              case 0x05:
                 if(0==buffer[0]){
                   alert("calibrate success.");
                 }else{
                   alert("calibrate fail,error:"+buffer[0].toString());
                 }
+                break;
+              case 0x03:
+                read_erom_handler(buffer);
+                break;
+              case 0x04:
+                if(0==buffer[0]){
+                  alert("erom write success.");
+                }else{
+                  alert("erom write fail,errorcode:"+buffer[0].toString());
+                }
+                break;
+              default:
+                break;
+            }
+          }
+          // 电脑接收到来自设备的消息回调
+          device.oninputreport = (event) => {
+            //console.log(event); // event中包含device、reportId、data等内容
+            let buffer = new Uint8Array(event.data.buffer); // event.data.buffer就是接收到的inputreport包数据了
+            let ofst;
+            switch(event.reportId)
+            {
+              case 0xFE://
+                console.log("fw recv");
+                fw_packet_dispatch(buffer[0],buffer.slice(1));
+                break;
+              case 0x30://std input report
+                std_input_handler(buffer);
+              //todo:
                 break;
               default:
                 break;
@@ -540,8 +804,7 @@
       };
       btnCaliSensor.onclick = async() =>{
         //alert("send cali");
-        const buf=new Uint8Array(62).fill(0);
-        await device.sendReport(0xF2,buf);
+        fw_snd(0x05,null);
       }
     </script>
   </body>
