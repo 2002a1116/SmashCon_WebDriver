@@ -207,8 +207,8 @@
         <p>this is for initialize factory config,<br/>pls use switch internal calibration instead.</p>
         <div4>
           <button type="button" id="js_cali_read">read</button>
-          <button type="button" id="js_cali_start">start</button>
-          <button type="button" id="js_cali_finish">finish</button>
+          <button type="button" id="js_cali_start">calibrate</button>
+          <button type="button" id="js_cali_finish">finish&save</button>
         </div4>
       </div3>
       <p>X:</p>
@@ -249,12 +249,18 @@
           <input type="number" id="js_yn"/>
         </div>
       </div7>
-      <p>joystick debounce</p>
-      <p>to be rewritten,sorry</p>
+      <p>joystick anti snapback delay(us)</p>
+      <input type="number" id="js_snpbk_delay" min="0" max="65535"/>
+      <p>usb packet timer mode</p>
+      <div4>
+        <item><input type="radio" name="pkt_timer_mode" value="0" checked/>stock(default)</item>
+        <item><input type="radio" name="pkt_timer_mode" value="1" />millisecond timestamp</item>
+        <item><input type="radio" name="pkt_timer_mode" value="2" />packet counter</item>
+      </div4>
       <p>rumble pattern switch strategy</p>
       <div3>
-        <item><input type="radio" name="rumble_mode" value="1" />ignore waveform with 0 amplitude</item>
-        <item><input type="radio" name="rumble_mode" value="0" checked/>play waveform with 0 amplitude for least predefined wareform time</item>
+        <item><input type="radio" name="rumble_mode" value="1" checked/>ignore waveform with 0 amplitude</item>
+        <item><input type="radio" name="rumble_mode" value="0" />play waveform with 0 amplitude for least predefined wareform time</item>
       </div3>
       <p>imu status:</p>
       <div3>
@@ -297,6 +303,7 @@
       const btnJoystickCaliStart = document.querySelector('#js_cali_start');
       const btnJoystickCaliEnd = document.querySelector('#js_cali_finish');
       const btnJoystickCaliRead = document.querySelector('#js_cali_read');
+      //const btnJoystickSetCenter = document.querySelector('#js_cali_set_center');
       const rgb_id = document.querySelector("#rgb_id");
       const rgb_color = document.querySelector("#rgb_color");
       const interval = document.querySelectorAll('input[name="interval"]');
@@ -323,6 +330,8 @@
       const imu_ratio_x = document.querySelector("#imu_ratio_x");
       const imu_ratio_y = document.querySelector("#imu_ratio_y");
       const imu_ratio_z = document.querySelector("#imu_ratio_z");
+      const js_snpbk_delay = document.querySelector("#js_snpbk_delay");
+      const pkt_timer_mode = document.querySelectorAll('input[name="pkt_timer_mode"]');
       const PAYLOAD_LENGTH = 61;
       let connection_status;
       let device; // 需要连接或已连接的设备
@@ -370,11 +379,13 @@
         js_yp.value=yp;
         js_yn.value=yn;
       }
-      btnJoystickCaliStart.onclick = () => {
+      btnJoystickCaliStart.onclick = async() => {
         xp=yp=0;
         xn=yn=4096;
         flush_js_cali_figure();
         js_cali_fsm=1;
+        let buf=new Uint8Array([js_id]);
+        await fw_snd(0x06,buf);
       }
       function std_input_handler(buf){
         //hori(lower 12 bit)
@@ -383,14 +394,7 @@
         let base=js_id*3+5;
         x=buf[base]+((buf[base+1]&0xf)<<8);
         y=(buf[base+1]>>4)+(buf[base+2]<<4);
-        if(js_cali_fsm){
-          if(js_cali_fsm==1){
-            xc=x;
-            yc=y;
-            //js_xc.value=js_x.value;
-            //js_yc.value=js_y.value;
-            js_cali_fsm=2;
-          }
+        if(js_cali_fsm==3){
           if(x>xp)xp=x;
           if(x<xn)xn=x;
           if(y>yp)yp=y;
@@ -398,8 +402,11 @@
         }
         flush_js_cali_figure();
       }
+      /*btnJoystickSetCenter.onclick = async() => {
+        await fw_snd(0x06,null);
+      }*/
       btnJoystickCaliEnd.onclick = async() => {
-        if(js_cali_fsm!=2){
+        if(js_cali_fsm!=3){
           alert("finish fail,status is:"+js_cali_fsm.toString());
           return;
         }
@@ -419,7 +426,7 @@
                   uint16_t AnalogStickCalYNegative:12;
               */
         let buf=new Uint8Array(14);
-        let addr=0x603d+js_id*0x12;
+        let addr=0x603d+js_id*0x09;
         buf[4]=9;//size
         for(let i=0;i<4;++i){
           buf[i]=addr&0xff;
@@ -440,7 +447,7 @@
         js_cali_fsm=0;
       }
       function read_erom_handler(buf){
-        let addr=0x603d+js_id*0x12;
+        let addr=0x603d+js_id*0x09;
         let addr2=buf[0]+(buf[1]<<8)+(buf[2]<<16)+(buf[3]<<24);
         //console.log("read_erom_handler");
         //console.log(buf);
@@ -454,6 +461,7 @@
         base=8;
         xc=buf[base]+((buf[base+1]&0xf)<<8);
         yc=(buf[base+1]>>4)+(buf[base+2]<<4);
+        console.log("xc:"+xc.toString());
 
         base=5;
         xp=buf[base]+((buf[base+1]&0xf)<<8)+xc;
@@ -462,11 +470,16 @@
         base=11;
         xn=xc-(buf[base]+((buf[base+1]&0xf)<<8));
         yn=yc-((buf[base+1]>>4)+(buf[base+2]<<4));
+        if(js_cali_fsm==2){
+          xp=xn=xc;
+          yp=yn=yc;
+          js_cali_fsm=3;
+        }
         flush_js_cali_figure();
       }
       const read_js_cali = async() => {
         let buf=new Uint8Array(5);
-        let addr=0x603d+js_id*0x12;
+        let addr=0x603d+js_id*0x09;
         buf[4]=9;//size
         for(let i=0;i<4;++i){
           buf[i]=addr&0xff;
@@ -481,28 +494,36 @@
         +conf.rgb_data[rgb_id.value*3+1].toString(16).padStart(2,'0')
         +conf.rgb_data[rgb_id.value*3].toString(16).padStart(2,'0');
       }
+      function fetch_u16(arr){
+        return arr[0]+(arr[1]<<8);
+      }
+      function put_u16(v){
+        return new Uint8Array([v&0xff,0xff&(v>>8)]);
+      }
       function unpack_conf(){
         conf.config_bitmap1=array[0];
         conf.in_interval=array[1];
         conf.out_interval=array[2];
         conf.hd_rumble_amp_ratio=_.cloneDeep(array.slice(3,7));
         conf.js_ratio=Array.from(array.slice(7,11));
-        conf.js_fitting_mode=array[11];
-        conf.js_fitting_param=array[12];
+        conf.joystick_snapback_filter_max_delay=fetch_u16(array.slice(11,13));
         conf.bd_addr=_.cloneDeep(array.slice(13,19));
         conf.imu_ratio_x=array[19];
         conf.imu_ratio_y=array[20];
         conf.imu_ratio_z=array[21];
         conf.pro_fw_version=array[22];
-        conf.rgb_cnt=array[23];
-        conf.rgb_data=_.cloneDeep(array.slice(24));
+        conf.ns_pkt_timer_mode=array[23]
+        conf.rgb_cnt=array[24];
+        conf.rgb_data=_.cloneDeep(array.slice(25));
       }
       function pack_conf(){
         array=[conf.config_bitmap1,conf.in_interval,conf.out_interval,
         ...conf.hd_rumble_amp_ratio,...conf.js_ratio,
-        conf.js_fitting_mode,conf.js_fitting_param,...conf.bd_addr,
+        ...put_u16(conf.joystick_snapback_filter_max_delay),
+        ...conf.bd_addr,
         conf.imu_ratio_x,conf.imu_ratio_y,conf.imu_ratio_z,
-        conf.pro_fw_version,conf.rgb_cnt,...conf.rgb_data
+        conf.pro_fw_version,conf.ns_pkt_timer_mode,
+        conf.rgb_cnt,...conf.rgb_data
         ];
       }
       function flush_setting(){
@@ -521,6 +542,8 @@
         imu_ratio_y.value=conf.imu_ratio_y/127.0;
         imu_ratio_z.value=conf.imu_ratio_z/127.0;
         set_radio_value(pro_fw_version,conf.pro_fw_version);
+        set_radio_value(pkt_timer_mode,conf.ns_pkt_timer_mode);
+        js_snpbk_delay.value=conf.joystick_snapback_filter_max_delay;
         flush_rgb();
       }
       function confirm_setting(){
@@ -542,6 +565,8 @@
         conf.config_bitmap1+=get_radio_value(rumble_mode)*0x40;
         conf.config_bitmap1+=get_radio_value(imu_status)*0x80;
         conf.pro_fw_version=get_radio_value(pro_fw_version);
+        conf.ns_pkt_timer_mode=get_radio_value(pkt_timer_mode);
+        conf.joystick_snapback_filter_max_delay=parseInt(js_snpbk_delay.value,10);
       }
       function hid_snd(id,buf){
         if(!(buf instanceof Array||buf instanceof ArrayBuffer||buf instanceof Uint8Array)){
@@ -767,6 +792,16 @@
                   alert("erom write fail,errorcode:"+buffer[0].toString());
                 }
                 break;
+              case 0x06:
+              if(0==buffer[0]){
+                  read_js_cali();
+                  if(js_cali_fsm==1)
+                    js_cali_fsm=2;
+                  //alert("start.");
+                }else{
+                  alert("start fail,errorcode:"+buffer[0].toString());
+                  js_cali_fsm=0;
+                }
               default:
                 break;
             }
