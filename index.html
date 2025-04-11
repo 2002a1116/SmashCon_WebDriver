@@ -168,14 +168,26 @@
       <p>
         controller color:
       </p>
-      <div7>
-        <input type="color" id="controller_color_main"/>
-        <input type="color" id="controller_color_sub"/>
-        <input type="color" id="controller_color_e1"/>
-        <input type="color" id="controller_color_e2"/>
+      <div9>
+        <div>
+          body:
+          <input type="color" id="controller_color_main"/>
+        </div>
+        <div>
+          button:
+          <input type="color" id="controller_color_sub"/>
+        </div>
+        <div>
+          left grip:
+          <input type="color" id="controller_color_e1"/>
+        </div>
+        <div>
+          right grip:
+          <input type="color" id="controller_color_e2"/>
+        </div>
         <button type="button" onclick="read_erom(0x6050,0x0C)">read</button>
         <button type="button" onclick="controller_color_save()">save</button>
-      </div7>
+      </div9>
       <p>pro firmware version</p>
       <div6>
         <item><input type="radio" name="pro_fw_version" value="0" />3.48</item>
