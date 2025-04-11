@@ -55,6 +55,16 @@
         grid-template-columns: 1fr 1fr 1fr 1fr;
         column-gap: 1rem;
       }
+      div8 {
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+        column-gap: 1rem;
+      }
+      div9 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+        column-gap: 1rem;
+      }
       item {
         height: 1rem;
       }
@@ -99,7 +109,22 @@
     </div>
     <div1>
       <p>connect status</p>
-      <p id="connection_status">disconnected.</p>
+      <div3>
+        <p id="connection_status">disconnected.</p>
+        <button type="button" id="open">Open</button>
+      </div3>
+      <p>device status</p>
+      <div4>
+        <span>
+          imu errorcode:<span id="imu_ecode">null</span>
+        </span>
+        <span>
+          imu id:0x<span id="imu_id">00</span>
+        </span>
+        <span>
+          avg scan rate:<span id="scan_rate">null</span>
+        </span>
+      </div4>
       <p>firmware version</p>
       <p id="fw_version">undefined</p>
       <div>
@@ -135,10 +160,22 @@
             <option value="27">28</option>
         </select>
       </div>
-      <div>
-        <input type="color" id="rgb_color"/>
-        <button type="button" id="rgb_set">confirm</button>
-      </div>
+      <div4>
+          <input type="color" id="rgb_color"/>
+          <input type="text" id="rgb_hex"/>
+          <button type="button" id="rgb_set">confirm</button>
+      </div4>
+      <p>
+        controller color:
+      </p>
+      <div7>
+        <input type="color" id="controller_color_main"/>
+        <input type="color" id="controller_color_sub"/>
+        <input type="color" id="controller_color_e1"/>
+        <input type="color" id="controller_color_e2"/>
+        <button type="button" onclick="read_erom(0x6050,0x0C)">read</button>
+        <button type="button" onclick="controller_color_save()">save</button>
+      </div7>
       <p>pro firmware version</p>
       <div6>
         <item><input type="radio" name="pro_fw_version" value="0" />3.48</item>
@@ -146,12 +183,17 @@
       </div6>
       <p>report rate</p>
       <div2>
-        <item><input type="radio" name="interval" value="1" />1000hz(pls disable imu)</item>
         <item><input type="radio" name="interval" value="2" />500hz(Experimental)</item>
-        <item><input type="radio" name="interval" value="4" checked/>250hz(Recommend)</item>
+        <item><input type="radio" name="interval" value="4" checked/>250hz(Progcc)</item>
+        <item><input type="radio" name="interval" value="5" />200hz(Match Timer)</item>
         <item><input type="radio" name="interval" value="8" />125hz(Default)</item>
-        <item><input type="radio" name="interval" value="16" />60hz(ns will refuse)</item>
+        <item><input type="radio" name="interval" value="16" />60hz(Ns dont support)</item>
       </div2>
+      <p>bluetooth addr:</p>
+      <div8>
+        <input type="text" id="bt_addr"/>
+        <button type="button" id="bt_addr_gen">gen</button>
+      </div8>
       <p>left rumble ratio:</p>
       <div6>
         <div>
@@ -174,30 +216,77 @@
           <input type="number" id="amp_rl"/>
         </div>
       </div6>
-      <p>left joystick ratio:</p>
+      <p>joystick snapback deadzone range</p>
       <div6>
         <div>
-          hori:
-          <input type="number" id="ljoy_hori"/>
+          left joystick:
+          <input type="number" id="ldz">
         </div>
         <div>
-          vert:
-          <input type="number" id="ljoy_vert"/>
+          right joystick:
+          <input type="number" id="rdz">
         </div>
       </div6>
-      <p>right joystick ratio:</p>
-      <div6>
+      <p>joystick ratio:</p>
+      <div7>
         <div>
-          hori:
-          <input type="number" id="rjoy_hori"/>
+          lx:
+          <input type="number" id="ljoy_hori" min=-4 max=4/>
         </div>
         <div>
-          vert:
-          <input type="number" id="rjoy_vert"/>
+          ly:
+          <input type="number" id="ljoy_vert" min=-4 max=4/>
         </div>
-      </div6>
+        <div>
+          rx:
+          <input type="number" id="rjoy_hori" min=-4 max=4/>
+        </div>
+        <div>
+          ry:
+          <input type="number" id="rjoy_vert" min=-4 max=4/>
+        </div>
+      </div7>
+      <p>joystick deadzone</p>
+      <div7>
+        <div>
+          lx:
+          <input type="number" id="dz_lx" min="0" max="255"/>
+        </div>
+        <div>
+          ly:
+          <input type="number" id="dz_ly" min="0" max="255"/>
+        </div>
+        <div>
+          rx:
+          <input type="number" id="dz_rx" min="0" max="255"/>
+        </div>
+        <div>
+          ry:
+          <input type="number" id="dz_ry" min="0" max="255"/>
+        </div>
+      </div7>
+      <p>joystick deadzone mode</p>
+      <div7>
+        <item><input type="radio" name="dz_mode" value="0" />disabled</item>
+        <item><input type="radio" name="dz_mode" value="1" checked/>center(default)</item>
+        <item><input type="radio" name="dz_mode" value="2" />axis()</item>
+        <item><input type="radio" name="dz_mode" value="2" />axis(smoothed)</item>
+      </div7>
+      <p>joystick internal center</p>
+      <div2>
+        <p id="internal_lxc">null</p>
+        <p id="internal_lyc">null</p>
+        <p id="internal_rxc">null</p>
+        <p id="internal_ryc">null</p>
+        <button type="button" onclick="read_erom(0x8001,8)">read</button>
+      </div2>
+      <p>joystick center calibrate:</p>
+      <div3>
+        <button type="button" onclick="fw_snd(0x07,null)">calibrate</button>
+        <p>pls keep joystick in the center before calibrate.</p>
+      </div3>
       <div>
-        joystick calibrate:
+        joystick factory calibrate:
         <select id="js_id">
           <option value="0">left</option>
           <option value="1">right</option>
@@ -249,8 +338,8 @@
           <input type="number" id="js_yn"/>
         </div>
       </div7>
-      <p>joystick anti snapback delay(us)</p>
-      <input type="number" id="js_snpbk_delay" min="0" max="65535"/>
+      <p>joystick anti snapback delay(ms)</p>
+      <input type="number" id="js_snpbk_delay" min="0" max="65"/>
       <p>usb packet timer mode</p>
       <div4>
         <item><input type="radio" name="pkt_timer_mode" value="0" checked/>stock(default)</item>
@@ -259,14 +348,16 @@
       </div4>
       <p>rumble pattern switch strategy</p>
       <div3>
-        <item><input type="radio" name="rumble_mode" value="1" checked/>ignore waveform with 0 amplitude</item>
-        <item><input type="radio" name="rumble_mode" value="0" />play waveform with 0 amplitude for least predefined wareform time</item>
+        <item><input type="radio" name="rumble_mode" value="1" />ignore waveform with 0 amplitude</item>
+        <item><input type="radio" name="rumble_mode" value="0" checked/>play waveform with 0 amplitude for least predefined wareform time</item>
       </div3>
       <p>imu status:</p>
       <div3>
         <item><input type="radio" name="imu_status" value="0" checked/>enabled</item>
         <item><input type="radio" name="imu_status" value="1" />disabled</item>
       </div3>
+      <p>imu sample gap(ms):</p>
+      <input type="number" id="imu_gap"/>
       <p>gyro ratio(0~2):(need recalibrate)</p>
       <div4>
         <div3>
@@ -284,7 +375,7 @@
       </div4>
       <P>calibrate IMU sensor</P>
       <button type="button" id="imu_cali">calibrate</button>
-      <button type="button" id="open">open</button>
+      <button type="button" id="reboot">reboot</button>
         <div4>
           <button type="button" id="close">close</button>
           <button type="button" id="read">read</button>
@@ -294,6 +385,10 @@
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script>
       const connection_status_text = document.querySelector("#connection_status");
+      const imu_ecode = document.querySelector("#imu_ecode");
+      const imu_id = document.querySelector("#imu_id");
+      const scan_rate = document.querySelector("#scan_rate");
+      const btnReboot = document.querySelector('#reboot');
       const btnCaliSensor = document.querySelector("#imu_cali");
       const btnOpen = document.querySelector("#open");
       const btnSend = document.querySelector("#save");
@@ -303,6 +398,7 @@
       const btnJoystickCaliStart = document.querySelector('#js_cali_start');
       const btnJoystickCaliEnd = document.querySelector('#js_cali_finish');
       const btnJoystickCaliRead = document.querySelector('#js_cali_read');
+      const btnBtAddrGen = document.querySelector('#bt_addr_gen');
       //const btnJoystickSetCenter = document.querySelector('#js_cali_set_center');
       const rgb_id = document.querySelector("#rgb_id");
       const rgb_color = document.querySelector("#rgb_color");
@@ -332,6 +428,16 @@
       const imu_ratio_z = document.querySelector("#imu_ratio_z");
       const js_snpbk_delay = document.querySelector("#js_snpbk_delay");
       const pkt_timer_mode = document.querySelectorAll('input[name="pkt_timer_mode"]');
+      const rgb_hex = document.querySelector('#rgb_hex');
+      const dz_lx = document.querySelector('#dz_lx');
+      const dz_ly = document.querySelector('#dz_ly');
+      const dz_rx = document.querySelector('#dz_rx');
+      const dz_ry = document.querySelector('#dz_ry');
+      const dz_mode = document.querySelectorAll('input[name="dz_mode"]');
+      const ldz = document.querySelector('#ldz');
+      const rdz = document.querySelector('#rdz');
+      const bt_addr = document.querySelector('#bt_addr');
+      const imu_gap = document.querySelector('#imu_gap');
       const PAYLOAD_LENGTH = 61;
       let connection_status;
       let device; // 需要连接或已连接的设备
@@ -347,6 +453,17 @@
       let x=0,y=0,xp=0,yp=0,xn=0,yn=0,xc=0,yc=0;
       const JS_FACTOR=32.0;
       const AMP_FACTOR=128.0;
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+      btnBtAddrGen.onclick = () =>{
+        let tmp="";
+        for(let i=0;i<6;++i)
+        {
+          tmp+=getRandomInt(0,255).toString(16).padStart(2,'0')+":";
+        }
+        bt_addr.value=tmp.slice(0,17);
+      }
       function get_radio_value(radios){
         for(let i=0;i<radios.length;++i){
           if(radios[i].checked===true){
@@ -384,6 +501,8 @@
         xn=yn=4096;
         flush_js_cali_figure();
         js_cali_fsm=1;
+        //we skip center cali cmd as its no longer used.
+        //cali fsm 1 now set center pos on web.
         let buf=new Uint8Array([js_id]);
         await fw_snd(0x06,buf);
       }
@@ -394,7 +513,13 @@
         let base=js_id*3+5;
         x=buf[base]+((buf[base+1]&0xf)<<8);
         y=(buf[base+1]>>4)+(buf[base+2]<<4);
-        if(js_cali_fsm==3){
+        if(js_cali_fsm==1)
+        {
+          xc=x;
+          yc=y;
+          js_cali_fsm=2;
+        }
+        if(js_cali_fsm==2){
           if(x>xp)xp=x;
           if(x<xn)xn=x;
           if(y>yp)yp=y;
@@ -405,8 +530,11 @@
       /*btnJoystickSetCenter.onclick = async() => {
         await fw_snd(0x06,null);
       }*/
+      btnReboot.onclick = async() => {
+        await fw_snd(0xFE,null);
+      }
       btnJoystickCaliEnd.onclick = async() => {
-        if(js_cali_fsm!=3){
+        if(js_cali_fsm!=2){
           alert("finish fail,status is:"+js_cali_fsm.toString());
           return;
         }
@@ -414,85 +542,131 @@
         let xnr=xc-xn;
         let ypr=yp-yc;
         let ynr=yc-yn;
-        console.log("cali js:"+js_id.toString());
-        console.log("set cali x:"+xc.toString()+"|"+xpr.toString()+"|"+xnr.toString());
-        console.log("set cali y:"+yc.toString()+"|"+ypr.toString()+"|"+ynr.toString());
-        //4 byte addr,1 byte size,6*1.5=9byte data
-        /*        uint16_t AnalogStickCalXPositive:12;
-                  uint16_t AnalogStickCalYPositive:12;
-                  uint16_t AnalogStickCalX0:12;
-                  uint16_t AnalogStickCalY0:12;
-                  uint16_t AnalogStickCalXNegative:12;
-                  uint16_t AnalogStickCalYNegative:12;
-              */
-        let buf=new Uint8Array(14);
-        let addr=0x603d+js_id*0x09;
-        buf[4]=9;//size
-        for(let i=0;i<4;++i){
-          buf[i]=addr&0xff;
-          addr>>=8;
-        }//addr
-        buf[5]=xpr&0xff;
-        buf[6]=((xpr>>8)&0xf)+((ypr&0xf)<<4);
-        buf[7]=(ypr>>4)&0xff;
+        let buf = new Uint8Array(9);
+        buf[0]=xpr&0xff;
+        buf[1]=((xpr>>8)&0xf)+((ypr&0xf)<<4);
+        buf[2]=(ypr>>4)&0xff;
 
-        buf[8]=xc&0xff;
-        buf[9]=((xc>>8)&0xf)+((yc&0xf)<<4);
-        buf[10]=(yc>>4)&0xff;
+        buf[3]=xc&0xff;
+        buf[4]=((xc>>8)&0xf)+((yc&0xf)<<4);
+        buf[5]=(yc>>4)&0xff;
 
-        buf[11]=xnr&0xff;
-        buf[12]=((xnr>>8)&0xf)+((ynr&0xf)<<4);
-        buf[13]=(ynr>>4)&0xff;
-        await fw_snd(0x04,buf);
+        buf[6]=xnr&0xff;
+        buf[7]=((xnr>>8)&0xf)+((ynr&0xf)<<4);
+        buf[8]=(ynr>>4)&0xff;
+        write_erom(0x603d+js_id*0x09,9,buf);
         js_cali_fsm=0;
       }
       function read_erom_handler(buf){
-        let addr=0x603d+js_id*0x09;
-        let addr2=buf[0]+(buf[1]<<8)+(buf[2]<<16)+(buf[3]<<24);
-        //console.log("read_erom_handler");
-        //console.log(buf);
-        if(addr!=addr2)return;
-        console.log("read success addr:"+addr.toString()+"|"+addr2.toString());
-        if(buf[4]!=9)return;
-        console.log("decode erom");
-        console.log(buf);
-        //console.log(buf[8].toString()+"|"+buf[9].toString()+"|"+buf[10].toString());
-        let base=8;
-        base=8;
-        xc=buf[base]+((buf[base+1]&0xf)<<8);
-        yc=(buf[base+1]>>4)+(buf[base+2]<<4);
-        console.log("xc:"+xc.toString());
+        let addr=buf[0]+(buf[1]<<8)+(buf[2]<<16)+(buf[3]<<24);
+        switch(addr&0xff00)
+        {
+          case 0x6000:
+            switch(addr&0xff)
+            {
+              case 0x3d:
+              /*fall through*/
+              case 0x46:
+                let addr2=0x603d+js_id*0x09;
+                if(addr!=addr2)return;
+                console.log("read success addr:"+addr.toString()+"|"+addr2.toString());
+                if(buf[4]!=9)return;
+                console.log("decode erom");
+                console.log(buf);
+                let base=8;
+                base=8;
+                xc=buf[base]+((buf[base+1]&0xf)<<8);
+                yc=(buf[base+1]>>4)+(buf[base+2]<<4);
+                console.log("xc:"+xc.toString());
 
-        base=5;
-        xp=buf[base]+((buf[base+1]&0xf)<<8)+xc;
-        yp=(buf[base+1]>>4)+(buf[base+2]<<4)+yc;
+                base=5;
+                xp=buf[base]+((buf[base+1]&0xf)<<8)+xc;
+                yp=(buf[base+1]>>4)+(buf[base+2]<<4)+yc;
 
-        base=11;
-        xn=xc-(buf[base]+((buf[base+1]&0xf)<<8));
-        yn=yc-((buf[base+1]>>4)+(buf[base+2]<<4));
-        if(js_cali_fsm==2){
-          xp=xn=xc;
-          yp=yn=yc;
-          js_cali_fsm=3;
+                base=11;
+                xn=xc-(buf[base]+((buf[base+1]&0xf)<<8));
+                yn=yc-((buf[base+1]>>4)+(buf[base+2]<<4));
+                js_cali_fsm=0;//we cancel cali as we sync data from controller erom.
+                flush_js_cali_figure();
+                break;
+              case 0x50:
+                document.querySelector('#controller_color_main').value='#'+u8a_to_hex(buf.slice(5,8).reverse());
+                document.querySelector('#controller_color_sub').value='#'+u8a_to_hex(buf.slice(8,11).reverse());
+                document.querySelector('#controller_color_e1').value='#'+u8a_to_hex(buf.slice(11,14).reverse());
+                document.querySelector('#controller_color_e2').value='#'+u8a_to_hex(buf.slice(14,17).reverse());
+                break;
+              default:
+                break;
+            }
+            break;
+          case 0x8000:
+            document.querySelector('#internal_lxc').innerHTML=buf[5]+(buf[6]<<8);
+            document.querySelector('#internal_lyc').innerHTML=buf[7]+(buf[8]<<8);
+            document.querySelector('#internal_rxc').innerHTML=buf[9]+(buf[10]<<8);
+            document.querySelector('#internal_ryc').innerHTML=buf[11]+(buf[12]<<8);
+            break;
         }
-        flush_js_cali_figure();
       }
-      const read_js_cali = async() => {
+      const read_erom = async(addr,size) => {
         let buf=new Uint8Array(5);
-        let addr=0x603d+js_id*0x09;
-        buf[4]=9;//size
+        buf[4]=size;//size
         for(let i=0;i<4;++i){
           buf[i]=addr&0xff;
           addr>>=8;
         }//addr
         await fw_snd(0x03,buf);
       }
+      const write_erom = async(addr,size,data) =>{
+        let buf=new Uint8Array(5);
+        buf[4]=size;
+        for(let i=0;i<4;++i){
+          buf[i]=addr&0xff;
+          addr>>=8;
+        }//addr
+        buf=[...buf,...data];
+        await fw_snd(0x04,buf);
+      }
+      function controller_color_save(){
+        let buf=new Uint8Array(0x0C);
+        let p=document.querySelector('#controller_color_main');
+        buf[2]=parseInt(p.value.slice(1,3),16)&0xff;
+        buf[1]=parseInt(p.value.slice(3,5),16)&0xff;
+        buf[0]=parseInt(p.value.slice(5,7),16)&0xff;
+        p=document.querySelector('#controller_color_sub');
+        buf[5]=parseInt(p.value.slice(1,3),16)&0xff;
+        buf[4]=parseInt(p.value.slice(3,5),16)&0xff;
+        buf[3]=parseInt(p.value.slice(5,7),16)&0xff;
+        p=document.querySelector('#controller_color_e1');
+        buf[8]=parseInt(p.value.slice(1,3),16)&0xff;
+        buf[7]=parseInt(p.value.slice(3,5),16)&0xff;
+        buf[6]=parseInt(p.value.slice(5,7),16)&0xff;
+        p=document.querySelector('#controller_color_e2');
+        buf[11]=parseInt(p.value.slice(1,3),16)&0xff;
+        buf[10]=parseInt(p.value.slice(3,5),16)&0xff;
+        buf[9]=parseInt(p.value.slice(5,7),16)&0xff;
+        write_erom(0x6050,0x0C,buf);
+      }
+      const read_js_cali = () => {
+        let addr=0x603d+js_id*0x09;
+        read_erom(addr,9);
+      }
+      function u8a_to_hex(data){
+        return data[0].toString(16).padStart(2,'0')+data[1].toString(16).padStart(2,'0')+data[2].toString(16).padStart(2,'0');
+      }
       function flush_rgb(){
         //rgb_color.value=conf.rgb_data[rgb_id.value*3]<<16+conf.rgb_data[rgb_id.value*3+1]<<8+conf.rgb_data[rgb_id.value*3+2];
         rgb_color.value='#'
-        +conf.rgb_data[rgb_id.value*3+2].toString(16).padStart(2,'0')
+        /*+conf.rgb_data[rgb_id.value*3+2].toString(16).padStart(2,'0')
         +conf.rgb_data[rgb_id.value*3+1].toString(16).padStart(2,'0')
-        +conf.rgb_data[rgb_id.value*3].toString(16).padStart(2,'0');
+        +conf.rgb_data[rgb_id.value*3].toString(16).padStart(2,'0');*/
+        +u8a_to_hex(conf.rgb_data.slice(rgb_id.value*3,rgb_id.value*3+3).reverse());
+        rgb_hex.value=rgb_color.value.slice(1);
+      }
+      rgb_color.onchange = () =>{
+        rgb_hex.value=rgb_color.value.slice(1);
+      }
+      rgb_hex.onchange = () =>{
+        rgb_color.value='#'+rgb_hex.value;
       }
       function fetch_u16(arr){
         return arr[0]+(arr[1]<<8);
@@ -504,25 +678,34 @@
         conf.config_bitmap1=array[0];
         conf.in_interval=array[1];
         conf.out_interval=array[2];
+        console.log("interval:"+conf.in_interval.toString()+"|"+conf.out_interval.toString());
         conf.hd_rumble_amp_ratio=_.cloneDeep(array.slice(3,7));
         conf.js_ratio=Array.from(array.slice(7,11));
-        conf.joystick_snapback_filter_max_delay=fetch_u16(array.slice(11,13));
-        conf.bd_addr=_.cloneDeep(array.slice(13,19));
-        conf.imu_ratio_x=array[19];
-        conf.imu_ratio_y=array[20];
-        conf.imu_ratio_z=array[21];
-        conf.pro_fw_version=array[22];
-        conf.ns_pkt_timer_mode=array[23]
-        conf.rgb_cnt=array[24];
-        conf.rgb_data=_.cloneDeep(array.slice(25));
+        conf.imu_sample_gap=fetch_u16(array.slice(11,13));
+        conf.ldz=fetch_u16(array.slice(13,15));
+        conf.rdz=fetch_u16(array.slice(15,17));
+        conf.joystick_snapback_filter_max_delay=fetch_u16(array.slice(17,19));
+        conf.bd_addr=_.cloneDeep(array.slice(19,25));
+        conf.imu_ratio_x=array[25];
+        conf.imu_ratio_y=array[26];
+        conf.imu_ratio_z=array[27];
+        conf.pro_fw_version=array[28];
+        conf.ns_pkt_timer_mode=array[29];
+        conf.dead_zone=Array.from(array.slice(30,34));
+        conf.dz_mode=array[34];
+        conf.rgb_cnt=array[35];
+        conf.rgb_data=_.cloneDeep(array.slice(36));
       }
       function pack_conf(){
         array=[conf.config_bitmap1,conf.in_interval,conf.out_interval,
         ...conf.hd_rumble_amp_ratio,...conf.js_ratio,
+        ...put_u16(conf.imu_sample_gap),
+        ...put_u16(conf.ldz),...put_u16(conf.rdz),
         ...put_u16(conf.joystick_snapback_filter_max_delay),
         ...conf.bd_addr,
         conf.imu_ratio_x,conf.imu_ratio_y,conf.imu_ratio_z,
         conf.pro_fw_version,conf.ns_pkt_timer_mode,
+        ...conf.dead_zone,conf.dz_mode,
         conf.rgb_cnt,...conf.rgb_data
         ];
       }
@@ -543,7 +726,21 @@
         imu_ratio_z.value=conf.imu_ratio_z/127.0;
         set_radio_value(pro_fw_version,conf.pro_fw_version);
         set_radio_value(pkt_timer_mode,conf.ns_pkt_timer_mode);
-        js_snpbk_delay.value=conf.joystick_snapback_filter_max_delay;
+        js_snpbk_delay.value=conf.joystick_snapback_filter_max_delay/1000.0;
+        dz_lx.value=conf.dead_zone[0];
+        dz_ly.value=conf.dead_zone[1];
+        dz_rx.value=conf.dead_zone[2];
+        dz_ry.value=conf.dead_zone[3];
+        ldz.value=conf.ldz;
+        rdz.value=conf.rdz;
+        set_radio_value(dz_mode,conf.dz_mode);
+        imu_gap.value=conf.imu_sample_gap/1000.0;
+        let tmp="";
+        //alert(conf.bd_addr.toString());
+        for(let i=0;i<6;++i){
+          tmp+=conf.bd_addr[i].toString(16).padStart(2,'0')+":";
+        }
+        bt_addr.value=tmp.slice(0,17);
         flush_rgb();
       }
       function confirm_setting(){
@@ -566,7 +763,20 @@
         conf.config_bitmap1+=get_radio_value(imu_status)*0x80;
         conf.pro_fw_version=get_radio_value(pro_fw_version);
         conf.ns_pkt_timer_mode=get_radio_value(pkt_timer_mode);
-        conf.joystick_snapback_filter_max_delay=parseInt(js_snpbk_delay.value,10);
+        conf.joystick_snapback_filter_max_delay=parseFloat(js_snpbk_delay.value)*1000;
+        conf.dead_zone[0]=parseInt(dz_lx.value,10);
+        conf.dead_zone[1]=parseInt(dz_ly.value,10);
+        conf.dead_zone[2]=parseInt(dz_rx.value,10);
+        conf.dead_zone[3]=parseInt(dz_ry.value,10);
+        conf.dz_mode=get_radio_value(dz_mode);
+        conf.ldz=parseInt(ldz.value,10);
+        conf.rdz=parseInt(rdz.value,10);
+        conf.imu_sample_gap=parseFloat(imu_gap.value)*1000;
+        let tmp=bt_addr.value;
+        for(let i=0;i < 6;++i){
+          conf.bd_addr[i]=parseInt(tmp.slice(0,2),16);
+          tmp=tmp.slice(3);
+        }
       }
       function hid_snd(id,buf){
         if(!(buf instanceof Array||buf instanceof ArrayBuffer||buf instanceof Uint8Array)){
@@ -579,8 +789,6 @@
         }else if(buf.length<63){
           buf=new Uint8Array([...buf,...(new Uint8Array(63-buf.length).fill(0))]);
         }
-        console.log("snd:"+id.toString());
-        console.log(buf);
         device.sendReport(id,buf);
       }
       function fw_snd(id,buf) {
@@ -591,8 +799,10 @@
           console.log(buf);
           return;
         }
-        console.log(buf);
         hid_snd(0xfe,new Uint8Array([id,...buf]));
+      }
+      function js_offset_reset(id){
+        fw_snd(0x07,buf);
       }
       const send_conf = async (save) => {
         try {
@@ -601,7 +811,6 @@
           }
           confirm_setting();
           pack_conf();
-          console.log("tag");
           let buf;
           let i=0;
           for(;(i+1)*PAYLOAD_LENGTH<=array.length;++i)
@@ -632,6 +841,7 @@
             throw "Device not opened";
           }
           fw_snd(0x01,null);//no payload
+          fw_snd(0xFD,null);//READ STATUS
         } catch (error) {
           msg = `${error}\n\n`;
           alert(msg);
@@ -644,7 +854,6 @@
         conf.rgb_data[rgb_id.value*3+2]=parseInt((rgb_color.value.slice(1,3)),16)&0xff;
         conf.rgb_data[rgb_id.value*3+1]=parseInt((rgb_color.value.slice(3,5)),16)&0xff;
         conf.rgb_data[rgb_id.value*3]=parseInt((rgb_color.value.slice(5,7)),16)&0xff;
-        console.log(rgb_color.value);
         send_conf(0);
       }
       rgb_id.onchange = () => {
@@ -726,12 +935,12 @@
           // await device.close(); // 关闭设备
           // await device.forget() // 遗忘设备
           function fw_packet_dispatch(id,buffer){
-            console.log("fw dispatch:"+id.toString());
+            console.log("fw dispatch: 0x"+id.toString(16).padStart(2,'0'));
             switch(id)
             {
               case 0xFF://fw version
                 fw_version=buffer[0]*255+buffer[1];
-                if(fw_version<2){
+                if(fw_version<3){
                   alert("fw too old.");
                   device=0;
                   connection_status=0;
@@ -739,6 +948,10 @@
                 }
                 document.querySelector("#fw_version").innerHTML=buffer[0].toString()+'.'+buffer[1].toString();
                 read_conf();
+                read_erom(0x603d,0x09);
+                read_erom(0x6046,0x09);
+                read_erom(0x8001,0x08);
+                read_erom(0x6050,0x0C);
                 break;
               case 0x01:
                 ofst=buffer[0];
@@ -749,14 +962,10 @@
                     break;
                   }
                   red_cnt=0;
-                  console.log("read confirm\n");
                   unpack_conf();
-                  console.log(conf);
                   flush_setting();
                 }
                 else{
-                  console.log("buffer");
-                  console.log(buffer);
                   ofst*=PAYLOAD_LENGTH;
                   buffer=buffer.slice(1);
                   array=[...array.slice(0,ofst),...buffer,...array.slice(ofst+buffer.length,128-ofst+buffer.length)];
@@ -793,7 +1002,7 @@
                 }
                 break;
               case 0x06:
-              if(0==buffer[0]){
+                /*if(0==buffer[0]){
                   read_js_cali();
                   if(js_cali_fsm==1)
                     js_cali_fsm=2;
@@ -801,7 +1010,23 @@
                 }else{
                   alert("start fail,errorcode:"+buffer[0].toString());
                   js_cali_fsm=0;
+                }*/
+                break;
+              case 0x07:
+                if(0==buffer[0]){
+                  read_erom(0x8001,8);
+                  alert("reset success");
+                  //reset success.
                 }
+                else{
+                  alert("reset fail");
+                }
+                break;
+              case 0xFD:
+                imu_ecode.innerHTML=buffer[0].toString();
+                imu_id.innerHTML=buffer[1].toString(16);
+                scan_rate.innerHTML=buffer[2].toString();
+                break;
               default:
                 break;
             }
@@ -814,7 +1039,7 @@
             switch(event.reportId)
             {
               case 0xFE://
-                console.log("fw recv");
+                //console.log("fw recv");
                 fw_packet_dispatch(buffer[0],buffer.slice(1));
                 break;
               case 0x30://std input report
@@ -832,7 +1057,13 @@
             console.log(msg);
         }
       };
-
+      btnClose.onclick = () => {
+        connection_status_text.innerHTML="disconnected.";
+        if(connection_status===0)return;
+        connection_status=0;
+        device.close();
+        alert("device closed.")
+      }
       // 发送数据相关操作
       btnSend.onclick = () => {
         send_conf(1);
