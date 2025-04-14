@@ -382,6 +382,19 @@
           <button type="button" id="read">read</button>
           <button type="button" id="save">save</button>
         </div4>
+      <p>exc log:</p>
+      <div2>
+        <span>mcause:<span id="mcause">null</span></span>
+        <span>mepc:<span id="mepc">null</span></span>
+        <button type="button" onclick="read_erom(0x8040,8)">read</button>
+        <button type="button" onclick="write_erom(0x8040,8,new Int8Array(8).fill(-1))">clear</button>
+      </div2>
+      <p>debug log:</p>
+      <div2>
+        <span>loc:<span id="tag">null</span></span>
+        <span>null:<span id="tag2">null</span></span>
+        <button type="button" onclick="read_erom(0x8009,2)">read</button>
+        <button type="button" onclick="write_erom(0x8009,2,new Int8Array(8).fill(-1))">clear</button>
     </div1>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script>
@@ -601,10 +614,23 @@
             }
             break;
           case 0x8000:
-            document.querySelector('#internal_lxc').innerHTML=buf[5]+(buf[6]<<8);
-            document.querySelector('#internal_lyc').innerHTML=buf[7]+(buf[8]<<8);
-            document.querySelector('#internal_rxc').innerHTML=buf[9]+(buf[10]<<8);
-            document.querySelector('#internal_ryc').innerHTML=buf[11]+(buf[12]<<8);
+            switch(addr&0xff){
+              case 0x01:
+                document.querySelector('#internal_lxc').innerHTML=fetch_u16(buf.slice(5,7));
+                document.querySelector('#internal_lyc').innerHTML=fetch_u16(buf.slice(7,9));
+                document.querySelector('#internal_rxc').innerHTML=fetch_u16(buf.slice(9,11));
+                document.querySelector('#internal_ryc').innerHTML=fetch_u16(buf.slice(11,13));
+                break;
+              case 0x40:
+                document.querySelector('#mcause').innerHTML=fetch_u32(buf.slice(5,9));
+                document.querySelector('#mepc').innerHTML=fetch_u32(buf.slice(9,13));
+                break;
+              case 0x09:
+                document.querySelector('#tag').innerHTML=buf[5];
+                document.querySelector('#tag2').innerHTML=buf[6];
+              default:
+                break;
+            }
             break;
         }
       }
@@ -671,6 +697,9 @@
       }
       function fetch_u16(arr){
         return arr[0]+(arr[1]<<8);
+      }
+      function fetch_u32(arr){
+        return arr[0]+(arr[1]<<8)+(arr[2]<<16)+(arr[3]<<24);
       }
       function put_u16(v){
         return new Uint8Array([v&0xff,0xff&(v>>8)]);
