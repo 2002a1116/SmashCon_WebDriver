@@ -116,7 +116,7 @@
       <p>device status</p>
       <div4>
         <span>
-          imu errorcode:<span id="imu_ecode">null</span>
+          imu fail rate:<span id="imu_frate">null</span>
         </span>
         <span>
           imu id:0x<span id="imu_id">00</span>
@@ -399,7 +399,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script>
       const connection_status_text = document.querySelector("#connection_status");
-      const imu_ecode = document.querySelector("#imu_ecode");
+      const imu_frate = document.querySelector("#imu_frate");
       const imu_id = document.querySelector("#imu_id");
       const scan_rate = document.querySelector("#scan_rate");
       const btnReboot = document.querySelector('#reboot');
@@ -1018,7 +1018,7 @@
                 if(0==buffer[0]){
                   alert("calibrate success.");
                 }else{
-                  alert("calibrate fail,error:"+buffer[0].toString());
+                  alert("calibrate fail,error:"+buffer[1].toString());
                 }
                 break;
               case 0x03:
@@ -1053,7 +1053,9 @@
                 }
                 break;
               case 0xFD:
-                imu_ecode.innerHTML=buffer[0].toString();
+                //console.log(buffer);
+                //alert(fetch_u32(buffer.slice(3,7)).toString()+"|"+fetch_u32(buffer.slice(7,11)).toString());
+                imu_frate.innerHTML=(1.0*fetch_u32(buffer.slice(7,11))/fetch_u32(buffer.slice(3,7))*100).toString().slice(0,4)+'%';
                 imu_id.innerHTML=buffer[1].toString(16);
                 scan_rate.innerHTML=buffer[2].toString();
                 break;
