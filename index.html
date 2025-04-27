@@ -65,6 +65,11 @@
         grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
         column-gap: 1rem;
       }
+      div10 {
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr;
+        column-gap: 1rem;
+      }
       item {
         height: 1rem;
       }
@@ -232,19 +237,19 @@
       <div7>
         <div>
           lx:
-          <input type="number" id="ljoy_hori" min=-4 max=4/>
+          <input type="number" id="ljoy_hori" min=-4 max=3.96875/>
         </div>
         <div>
           ly:
-          <input type="number" id="ljoy_vert" min=-4 max=4/>
+          <input type="number" id="ljoy_vert" min=-4 max=3.96875/>
         </div>
         <div>
           rx:
-          <input type="number" id="rjoy_hori" min=-4 max=4/>
+          <input type="number" id="rjoy_hori" min=-4 max=3.96875/>
         </div>
         <div>
           ry:
-          <input type="number" id="rjoy_vert" min=-4 max=4/>
+          <input type="number" id="rjoy_vert" min=-4 max=3.96875/>
         </div>
       </div7>
       <p>joystick deadzone</p>
@@ -382,6 +387,12 @@
           <button type="button" id="read">read</button>
           <button type="button" id="save">save</button>
         </div4>
+      <p>import&export:</p>
+      <div10>
+        <input type="text" id="conf_seri"/>
+        <button type="button" id="conf_import">import</button>
+        <button type="button" id="conf_export">export</button>
+      </div10>
       <p>exc log:</p>
       <div2>
         <span>mcause:<span id="mcause">null</span></span>
@@ -402,6 +413,8 @@
       const imu_frate = document.querySelector("#imu_frate");
       const imu_id = document.querySelector("#imu_id");
       const scan_rate = document.querySelector("#scan_rate");
+      const btnConfImport = document.querySelector('#conf_import');
+      const btnConfExport = document.querySelector('#conf_export');
       const btnReboot = document.querySelector('#reboot');
       const btnCaliSensor = document.querySelector("#imu_cali");
       const btnOpen = document.querySelector("#open");
@@ -452,6 +465,7 @@
       const rdz = document.querySelector('#rdz');
       const bt_addr = document.querySelector('#bt_addr');
       const imu_gap = document.querySelector('#imu_gap');
+      const conf_seri=document.querySelector('#conf_seri');
       const PAYLOAD_LENGTH = 61;
       let connection_status;
       let device; // 需要连接或已连接的设备
@@ -544,6 +558,13 @@
       /*btnJoystickSetCenter.onclick = async() => {
         await fw_snd(0x06,null);
       }*/
+      btnConfImport.onclick = () => {
+        conf=JSON.parse(conf_seri.value);
+        flush_setting();
+      }
+      btnConfExport.onclick = () => {
+        conf_seri.value=JSON.stringify(conf);
+      }
       btnReboot.onclick = async() => {
         await fw_snd(0xFE,null);
       }
