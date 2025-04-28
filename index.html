@@ -381,6 +381,22 @@
       </div4>
       <P>calibrate IMU sensor</P>
       <button type="button" id="imu_cali">calibrate</button>
+      
+      <p>swap button a,b</p>
+      <div6>
+        <item><input type="radio" name="a_b_swap" value="1" />enabled</item>
+        <item><input type="radio" name="a_b_swap" value="0" checked/>disabled</item>
+      </div6>
+      <p>swap button x,y</p>
+      <div6>
+        <item><input type="radio" name="x_y_swap" value="1" />enabled</item>
+        <item><input type="radio" name="x_y_swap" value="0" checked/>disabled</item>
+      </div6>
+      <p>cross key</p>
+      <div6>
+        <item><input type="radio" name="ck_disabled" value="0" checked/>on</item>
+        <item><input type="radio" name="ck_disabled" value="1" />off</item>
+      </div6>
       <button type="button" id="reboot">reboot</button>
         <div4>
           <button type="button" id="close">close</button>
@@ -466,6 +482,9 @@
       const bt_addr = document.querySelector('#bt_addr');
       const imu_gap = document.querySelector('#imu_gap');
       const conf_seri=document.querySelector('#conf_seri');
+      const a_b_swap = document.querySelectorAll('input[name="a_b_swap"]');
+      const x_y_swap = document.querySelectorAll('input[name="x_y_swap"]');
+      const ck_disabled= document.querySelectorAll('input[name="ck_disabled"]');
       const PAYLOAD_LENGTH = 61;
       let connection_status;
       let device; // 需要连接或已连接的设备
@@ -792,6 +811,9 @@
           tmp+=conf.bd_addr[i].toString(16).padStart(2,'0')+":";
         }
         bt_addr.value=tmp.slice(0,17);
+        set_radio_value(ck_disabled,(conf.config_bitmap1>>2)&1);
+        set_radio_value(x_y_swap,(conf.config_bitmap1>>3)&1);
+        set_radio_value(a_b_swap,(conf.config_bitmap1>>4)&1);
         flush_rgb();
       }
       function confirm_setting(){
@@ -810,8 +832,8 @@
         conf.imu_ratio_z=parseInt(imu_ratio_z.value*127,10);
         //alert("conf.imu2_ratio"+conf.imu2_ratio.toString());
         conf.config_bitmap1=0;
-        conf.config_bitmap1+=get_radio_value(rumble_mode)*0x40;
-        conf.config_bitmap1+=get_radio_value(imu_status)*0x80;
+        conf.config_bitmap1|=get_radio_value(rumble_mode)*0x40;
+        conf.config_bitmap1|=get_radio_value(imu_status)*0x80;
         conf.pro_fw_version=get_radio_value(pro_fw_version);
         conf.ns_pkt_timer_mode=get_radio_value(pkt_timer_mode);
         conf.joystick_snapback_filter_max_delay=parseFloat(js_snpbk_delay.value)*1000;
@@ -828,6 +850,9 @@
           conf.bd_addr[i]=parseInt(tmp.slice(0,2),16);
           tmp=tmp.slice(3);
         }
+        conf.config_bitmap1|=get_radio_value(ck_disabled)*0x04;
+        conf.config_bitmap1|=get_radio_value(x_y_swap)*0x08;
+        conf.config_bitmap1|=get_radio_value(a_b_swap)*0x10;
       }
       function hid_snd(id,buf){
         if(!(buf instanceof Array||buf instanceof ArrayBuffer||buf instanceof Uint8Array)){
